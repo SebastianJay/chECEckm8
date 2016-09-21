@@ -81,3 +81,8 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Code Composer
+#===============
+.metadata/
+.tempFiles/
