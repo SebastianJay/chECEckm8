@@ -86,3 +86,19 @@ $RECYCLE.BIN/
 #===============
 .metadata/
 .tempFiles/
+.config/
+.launches/
+Debug/
+Release/
+.xdchelp
+
+# Python
+#===============
+*.pyc
+
+# Third party software
+#===============
+# Stockfish binary
+chess-engine/stockfish*
+# Driverlib add-in for CCS
+ccs-workspace/driverlib/
