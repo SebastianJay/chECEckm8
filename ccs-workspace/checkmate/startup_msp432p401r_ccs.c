@@ -78,7 +78,10 @@ extern void TA2_0_IRQHandler    (void) __attribute__((weak,alias("Default_Handle
 extern void TA2_N_IRQHandler    (void) __attribute__((weak,alias("Default_Handler")));
 extern void TA3_0_IRQHandler    (void) __attribute__((weak,alias("Default_Handler")));
 extern void TA3_N_IRQHandler    (void) __attribute__((weak,alias("Default_Handler")));
-extern void EUSCIA0_IRQHandler  (void) __attribute__((weak,alias("Default_Handler")));
+
+//extern void EUSCIA0_IRQHandler  (void) __attribute__((weak,alias("Default_Handler")));
+extern void EUSCIA0_IRQHandler  (void);
+
 extern void EUSCIA1_IRQHandler  (void) __attribute__((weak,alias("Default_Handler")));
 extern void EUSCIA2_IRQHandler  (void) __attribute__((weak,alias("Default_Handler")));
 extern void EUSCIA3_IRQHandler  (void) __attribute__((weak,alias("Default_Handler")));

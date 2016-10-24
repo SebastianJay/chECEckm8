@@ -86,3 +86,17 @@ $RECYCLE.BIN/
 #===============
 .metadata/
 .tempFiles/
+.config/
+.launches/
+Debug/
+Release/
+.xdchelp
+
+# Python
+#===============
+.pyc
+
+# Third party software
+#===============
+chess-engine/stockfish-7-64
+ccs-workspace/driverlib/

@@ -1,5 +1,5 @@
 /*
- * uart.h
+ * uart_comm.h
  *
  * Deals with communication with remote machine.
  *
@@ -7,10 +7,17 @@
  *      Author: Jay
  */
 
-#ifndef UART_H_
-#define UART_H_
+#ifndef UART_COMM_H_
+#define UART_COMM_H_
 
 #include "board_state.h"
+
+/** Defines **/
+#define UART_RECEIVE_BUFFER_LENGTH 32
+
+/** Globals **/
+volatile unsigned char gReceiveBuffer[UART_RECEIVE_BUFFER_LENGTH];
+volatile unsigned short gReceiveBufferIndex;
 
 /** Functions **/
 // do any setup to send and receive through UART
@@ -21,4 +28,8 @@ void send(piece_movement move);
 // receive a piece movement response from chess server
 void receive(piece_movement* move);
 
-#endif /* UART_H_ */
+// DEBUG functions
+void helloWorldSend();
+void helloWorldReceive();
+
+#endif /* UART_COMM_H_ */

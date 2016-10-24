@@ -40,7 +40,7 @@
 
 #include "msp.h"
 
-void main(void)
+void main_blink(void)
 {
     volatile uint32_t i;
 

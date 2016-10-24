@@ -61,7 +61,7 @@ void initSensors();
 // compares nextState against currentState and update changeStateCounter
 void updateChangeStateCounter();
 
-// for changes that meet threshold, record move in moveList and update currentState
+// for changes that meet threshold, record move in moveList and update currentState and moveList
 void updateMoveList();
 
 // in the invalid state, compare currentState against validState and return true if identical
