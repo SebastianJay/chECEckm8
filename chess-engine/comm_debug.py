@@ -1,6 +1,8 @@
-from comm import ser
+from comm import Comm
 
 def debugReceive():
+    Comm.setPort('COM5')
+    ser = Comm.getSerial()
     print ser.name
     received = ''
     while not received:
@@ -13,8 +15,11 @@ def debugReceive():
             print received
 
 def debugSend():
+    Comm.setPort('COM5')
+    ser = Comm.getSerial()
     print ser.name
     ser.write('Hello world!')
+    #ser.write('Hello world?')   # negative test
     print 'Done sending.'
 
 if __name__ == '__main__':

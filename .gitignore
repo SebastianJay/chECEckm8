@@ -94,9 +94,11 @@ Release/
 
 # Python
 #===============
-.pyc
+*.pyc
 
 # Third party software
 #===============
-chess-engine/stockfish-7-64
+# Stockfish binary
+chess-engine/stockfish*
+# Driverlib add-in for CCS
 ccs-workspace/driverlib/

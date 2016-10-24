@@ -28,19 +28,21 @@ const eUSCI_UART_Config uartConfig =
 		EUSCI_A_UART_OVERSAMPLING_BAUDRATE_GENERATION	// oversampling mode
 };
 
-
-// ISR for receiving through USCI UART
-void EUSCIA0_IRQHandler()
+/* EUSCI A0 UART ISR - Echoes data back to PC host */
+void EUSCIA0_IRQHandler(void)
 {
-	//MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
-	if (UCA0IFG & UCRXIFG)
-	{
-		gReceiveBuffer[gReceiveBufferIndex++] = UCA0RXBUF;
+    uint32_t status = MAP_UART_getEnabledInterruptStatus(EUSCI_A0_BASE);
+    MAP_UART_clearInterruptFlag(EUSCI_A0_BASE, status);
+
+    if(status & EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG)
+    {
+		gReceiveBuffer[gReceiveBufferIndex++] = MAP_UART_receiveData(EUSCI_A0_BASE);
 		if (gReceiveBufferIndex >= UART_RECEIVE_BUFFER_LENGTH)
 		{
 			gReceiveBufferIndex = 0;
 		}
-	}
+    }
+
 }
 
 void helloWorldSend()
