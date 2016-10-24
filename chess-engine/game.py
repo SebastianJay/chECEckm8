@@ -12,7 +12,7 @@ import chess.pgn
 import time
 
 from utility import *
-from comm import *
+#from comm import *
 
 # Waits for player move from serial input, then makes the move
 def player_move(node, board):
@@ -57,7 +57,7 @@ def computer_move(node, board, engine, difficulty):
 
     # Write move to serial 
     code = uci_to_int(str(move))
-    ser.write(str(code))
+    # ser.write(str(code))
     
     node = node.add_variation(move)
     return node
@@ -74,7 +74,7 @@ def main():
         # Create a game and set headers.
         game = chess.pgn.Game()
         game.headers["Black"] = engine.name
-        # game.headers["White"] = engine.name
+        game.headers["White"] = engine.name
 
         game.setup(board)
         node = game
@@ -83,8 +83,8 @@ def main():
 
         while True:
             if board.is_game_over(): break
-            # node = computer_move(node, board, engine, 3)
-            node = player_move(node, board)
+            node = computer_move(node, board, engine, 3)
+            # node = player_move(node, board)
             print board
 
             if board.is_game_over(): break
@@ -96,6 +96,7 @@ def main():
 
         game.headers["Result"] = board.result()
         print game
+        break
 
 if __name__ == '__main__':
     main()
