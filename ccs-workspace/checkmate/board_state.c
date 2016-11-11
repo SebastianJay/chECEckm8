@@ -40,11 +40,12 @@ void updateChangeStateCounter()
 		for (c = 0; c < BOARD_COLS; c++)
 		{
 			short change = gBoardState.nextState[r][c] != gBoardState.currentState[r][c] ? 1 : 0;
-			if (change == 1 && gBoardState.changeStateBuffer[r][c][gBoardState.changeStateBufferIndex] == 0)
+			short previousValue = gBoardState.changeStateBuffer[r][c][gBoardState.changeStateBufferIndex];
+			if (change == 1 && previousValue == 0)
 			{
 				gBoardState.changeStateCounter[r][c]++;
 			}
-			if (change == 0 && gBoardState.changeStateBuffer[r][c][gBoardState.changeStateBufferIndex] == 1)
+			if (change == 0 && previousValue == 1)
 			{
 				gBoardState.changeStateCounter[r][c]--;
 			}
@@ -54,7 +55,7 @@ void updateChangeStateCounter()
 	gBoardState.changeStateBufferIndex = (gBoardState.changeStateBufferIndex + 1) % MOVES_CHANGE_BUFFER_WINDOW;
 }
 
-void updateCurrentState(short updateMoveList)
+void updateCurrentState(char updateMoveList)
 {
 	short r, c, i;
 	for (r = 0; r < BOARD_ROWS; r++)
@@ -84,9 +85,9 @@ void updateCurrentState(short updateMoveList)
 	}
 }
 
-short isCurrentStateValid()
+char isCurrentStateValid()
 {
-	short r, c, i;
+	short r, c;
 	for (r = 0; r < BOARD_ROWS; r++)
 	{
 		for (c = 0; c < BOARD_COLS; c++)
@@ -97,130 +98,155 @@ short isCurrentStateValid()
 			}
 		}
 	}
+	// reset the moveList if any stale data is there
+	gBoardState.moveListIndex = 0;
+	// board back to last valid state
 	return TRUE;
 }
 
-short constructPieceMovement(piece_movement* move)
+char constructPieceMovement(piece_movement* move)
 {
 	short i;
-	short rStart = -1;
-	short rEnd = -1;
-	short cStart = -1;
-	short cEnd = -1;
+	// information about the piece moving
+	// location of first piece coming off board
+	short rStart1 = -1;
+	short cStart1 = -1;
+	// location of second piece coming off board
+	short rStart2 = -1;
+	short cStart2 = -1;
+	// location of first piece coming onto board
+	short rEnd1 = -1;
+	short cEnd1 = -1;
+	// extra flags for castle if it is detected
 	short isCastle = FALSE;
-	for (gBoardState.moveListIndex; i >= 0; i--)
+	short isCastleFinished = FALSE;
+
+	// loop through all the recognized moves
+	for (i = 0; i < gBoardState.moveListIndex; i++)
 	{
 		short r = gBoardState.moveList[i].r;
 		short c = gBoardState.moveList[i].c;
 
-		// piece moving onto the board
-		if (gBoardState.moveList[i].dir == 1)
-		{
-			// if destination was not previously set
-			if (rEnd != -1 && cEnd != -1)
-			{
-				rEnd = r;
-				cEnd = c;
-			}
-			else
-			{
-				short rRook;
-				short cRook;
-				// check for castling
-				if ((r == 0 || r == 7) && (c == 2 && c == 6))
-				{
-					// move currently examined is king end position
-					rRook = rEnd;
-					cRook = cEnd;
-					rEnd = r;
-					cEnd = c;
-				}
-				else if (!((rEnd == 0 || rEnd == 7) && (cEnd == 2 && cEnd == 6)))
-				{
-					// multiple pieces came onto board and one was not a valid king landing spot
-					//  therefore do not recognize this move as valid
-					return ERROR;
-				}
-				else
-				{
-					// move currently examined is rook end position
-					rRook = r;
-					cRook = c;
-				}
-
-				// TODO validate king and rook end positions
-
-				isCastle = TRUE;
-			}
-		}
-		else	// piece coming off board
+		if (gBoardState.moveList[i].dir == 0)	// piece coming off board
 		{
 			// if source was not previously set
-			if (rStart != -1 && cStart != -1)
+			if (rStart1 == -1 && cStart1 == -1)
 			{
-				rStart = r;
-				cStart = c;
+				rStart1 = r;
+				cStart1 = c;
+			}
+			// if second source was not previously set
+			else if (rStart2 == -1 && cStart2 == -1)
+			{
+				rStart2 = r;
+				cStart2 = c;
 			}
 			else
 			{
-				if (isCastle)
+				// no chess move requires three pieces to come off board - seems invalid
+				return ERROR;
+			}
+		}
+		else		// piece moving onto the board
+		{
+			// if destination was not previously set
+			if (rEnd1 == -1 && cEnd1 == -1)
+			{
+				rEnd1 = r;
+				cEnd1 = c;
+				if (rEnd1 == rStart1 && cEnd1 == cStart1)
 				{
-					short rRook;
-					short cRook;
-					// check for castling
-					if ((r == 0 || r == 7) && c == 4)
-					{
-						// move currently examined is king start position
-						rRook = rStart;
-						cRook = cStart;
-						rStart = r;
-						cStart = c;
-					}
-					else if (!((rStart == 0 || rStart == 7) && cStart == 4))
-					{
-						// multiple pieces lifted off board and one was not a valid king starting spot
-						//  therefore do not recognize this move as valid
-						return ERROR;
-					}
-					else
-					{
-						// move currently examined is rook start position
-						rRook = r;
-						cRook = c;
-					}
-
-					// TODO validate rook and king start positions
-
+					// piece moved to where first piece moved off - adjust start position
+					rStart1 = rStart2;
+					cStart1 = cStart2;
+					break;
+				}
+				else if (rEnd1 == rStart2 && cEnd1 == cStart2)
+				{
+					// piece moved to where second moved off, start is ok
+					break;
 				}
 				else
 				{
-					// piece was lifted at destination, indicating possible capture
-					if (rStart == rEnd && cStart == cEnd)
+					// piece moved to where neither moved off
+					// check for en passant
+					if (cEnd1 == cStart1)
 					{
-						// use where other piece was lifted
-						rStart = r;
-						cStart = c;
+						// piece moved to same column as first piece coming off - adjust start position
+						rStart1 = rStart2;
+						cStart1 = cStart2;
+						break;
+					}
+					else if (cEnd1 == cStart2)
+					{
+						// piece moved to same column as second coming off, start is ok
+						break;
 					}
 					else
 					{
-						// could be en passant, so use correct starting position
-						// if current start position is where captured pawn was lifted, use other move
-						if (cStart == cEnd)
+						// check for castle
+						if ((rStart1 == 0 || rStart1 == 7) && cStart1 == 4)
 						{
-							rStart = r;
-							cStart = c;
+							// first piece moved from valid king start point
+							isCastle = TRUE;
+						}
+						else if ((rStart2 == 0 || rStart2 == 7) && cStart2 == 4)
+						{
+							// second piece moved from valid king start point
+							short rtmp = rStart1;
+							short ctmp = cStart1;
+							rStart1 = rStart2;
+							cStart1 = cStart2;
+							rStart2 = rtmp;
+							cStart2 = ctmp;	// swap so king point is first in ordering
+							isCastle = TRUE;
+						}
+						else
+						{
+							// nothing else seems possible at this point
+							return ERROR;
 						}
 					}
+				}
+			}
+			else if (isCastle)
+			{
+				// find the valid king ending point
+				short rEnd2 = r;
+				short cEnd2 = c;
+				if ((rEnd2 == 0 || rEnd2 == 7) && (cEnd2 == 2 || cEnd2 == 6))
+				{
+					// second piece moving on was king - swap end position
+					short rtmp = rEnd1;
+					short ctmp = cEnd1;
+					rEnd1 = rEnd2;
+					cEnd1 = cEnd2;
+					rEnd2 = rtmp;
+					cEnd2 = ctmp;
+				}
+
+				// compare rook and king start and end positions
+				if ((rStart1 == 0 && cStart1 == 4 && rStart2 == 0 && cStart2 == 7 && rEnd1 == 0 && cEnd1 == 6 && rEnd2 == 0 && cEnd2 == 5) ||
+					(rStart1 == 0 && cStart1 == 4 && rStart2 == 0 && cStart2 == 0 && rEnd1 == 0 && cEnd1 == 2 && rEnd2 == 0 && cEnd2 == 3) ||
+					(rStart1 == 7 && cStart1 == 4 && rStart2 == 7 && cStart2 == 7 && rEnd1 == 7 && cEnd1 == 6 && rEnd2 == 7 && cEnd2 == 5) ||
+					(rStart1 == 7 && cStart1 == 4 && rStart2 == 7 && cStart2 == 0 && rEnd1 == 7 && cEnd1 == 2 && rEnd2 == 7 && cEnd2 == 3))
+				{
+					isCastleFinished = TRUE;
+				}
+				else
+				{
+					// not a castle, so this seems invalid
+					return ERROR;
 				}
 			}
 		}
 	}
 
 	// if a valid start and end location was produced
-	if (rStart != -1 && cStart != -1 && rEnd != -1 && cEnd != -1)
+	if (rStart1 != -1 && cStart1 != -1 && rEnd1 != -1 && cEnd1 != -1 && !(isCastle && !isCastleFinished))
 	{
 		// if start same as end (player moved piece off and on)
-		if (rStart == rEnd && cStart == cEnd)
+		if (rStart1 == rEnd1 && cStart1 == cEnd1)
 		{
 			// ignore those moves and reset moveList
 			gBoardState.moveListIndex = 0;
@@ -232,10 +258,10 @@ short constructPieceMovement(piece_movement* move)
 			gBoardState.moveListIndex = 0;
 
 			// return the movement
-			move->rStart = rStart;
-			move->cStart = cStart;
-			move->rEnd = rEnd;
-			move->cEnd = cEnd;
+			move->rStart = rStart1;
+			move->cStart = cStart1;
+			move->rEnd = rEnd1;
+			move->cEnd = cEnd1;
 			return TRUE;
 		}
 	}

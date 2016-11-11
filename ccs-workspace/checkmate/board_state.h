@@ -69,14 +69,14 @@ void initSensors();
 void updateChangeStateCounter();
 
 // for changes that meet threshold, update currentState and optionally update moveList
-void updateCurrentState(short updateMoveList);
+void updateCurrentState(char updateMoveList);
 
 // in the invalid state, compare currentState against validState and return true if identical
-short isCurrentStateValid();
+char isCurrentStateValid();
 
 // examine moveList and return TRUE and write to *move if chess move detected, FALSE otherwise
 // can also return ERROR if an invalid move is detected from MSP
-short constructPieceMovement(piece_movement* move);
+char constructPieceMovement(piece_movement* move);
 
 // read from sensor network into nextState
 void readNextState();
