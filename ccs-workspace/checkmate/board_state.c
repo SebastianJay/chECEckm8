@@ -11,12 +11,12 @@
 void initSensors()
 {
 	// init globals
-	short r, c, i;
+	char r, c, i;
 	for (r = 0; r < BOARD_ROWS; r++)
 	{
 		for (c = 0; c < BOARD_COLS; c++)
 		{
-			short startState = (r <= 1 || r >= 6) ? 1 : 0;
+			char startState = (r <= 1 || r >= 6) ? 1 : 0;
 			gBoardState.validState[r][c] = startState;
 			gBoardState.currentState[r][c] = startState;
 			gBoardState.nextState[r][c] = startState;
@@ -34,13 +34,13 @@ void initSensors()
 
 void updateChangeStateCounter()
 {
-	short r, c;
+	char r, c;
 	for (r = 0; r < BOARD_ROWS; r++)
 	{
 		for (c = 0; c < BOARD_COLS; c++)
 		{
-			short change = gBoardState.nextState[r][c] != gBoardState.currentState[r][c] ? 1 : 0;
-			short previousValue = gBoardState.changeStateBuffer[r][c][gBoardState.changeStateBufferIndex];
+			char change = gBoardState.nextState[r][c] != gBoardState.currentState[r][c] ? 1 : 0;
+			char previousValue = gBoardState.changeStateBuffer[r][c][gBoardState.changeStateBufferIndex];
 			if (change == 1 && previousValue == 0)
 			{
 				gBoardState.changeStateCounter[r][c]++;
@@ -57,7 +57,7 @@ void updateChangeStateCounter()
 
 void updateCurrentState(char updateMoveList)
 {
-	short r, c, i;
+	char r, c, i;
 	for (r = 0; r < BOARD_ROWS; r++)
 	{
 		for (c = 0; c < BOARD_COLS; c++)
@@ -85,9 +85,9 @@ void updateCurrentState(char updateMoveList)
 	}
 }
 
-char isCurrentStateValid()
+signed char isCurrentStateValid()
 {
-	short r, c;
+	char r, c;
 	for (r = 0; r < BOARD_ROWS; r++)
 	{
 		for (c = 0; c < BOARD_COLS; c++)
@@ -104,28 +104,28 @@ char isCurrentStateValid()
 	return TRUE;
 }
 
-char constructPieceMovement(piece_movement* move)
+signed char constructPieceMovement(piece_movement* move)
 {
-	short i;
+	char i;
 	// information about the piece moving
 	// location of first piece coming off board
-	short rStart1 = -1;
-	short cStart1 = -1;
+	signed char rStart1 = -1;
+	signed char cStart1 = -1;
 	// location of second piece coming off board
-	short rStart2 = -1;
-	short cStart2 = -1;
+	signed char rStart2 = -1;
+	signed char cStart2 = -1;
 	// location of first piece coming onto board
-	short rEnd1 = -1;
-	short cEnd1 = -1;
+	signed char rEnd1 = -1;
+	signed char cEnd1 = -1;
 	// extra flags for castle if it is detected
-	short isCastle = FALSE;
-	short isCastleFinished = FALSE;
+	char isCastle = FALSE;
+	char isCastleFinished = FALSE;
 
 	// loop through all the recognized moves
 	for (i = 0; i < gBoardState.moveListIndex; i++)
 	{
-		short r = gBoardState.moveList[i].r;
-		short c = gBoardState.moveList[i].c;
+		char r = gBoardState.moveList[i].r;
+		char c = gBoardState.moveList[i].c;
 
 		if (gBoardState.moveList[i].dir == 0)	// piece coming off board
 		{
@@ -193,8 +193,8 @@ char constructPieceMovement(piece_movement* move)
 						else if ((rStart2 == 0 || rStart2 == 7) && cStart2 == 4)
 						{
 							// second piece moved from valid king start point
-							short rtmp = rStart1;
-							short ctmp = cStart1;
+							char rtmp = rStart1;
+							char ctmp = cStart1;
 							rStart1 = rStart2;
 							cStart1 = cStart2;
 							rStart2 = rtmp;
@@ -212,13 +212,13 @@ char constructPieceMovement(piece_movement* move)
 			else if (isCastle)
 			{
 				// find the valid king ending point
-				short rEnd2 = r;
-				short cEnd2 = c;
+				char rEnd2 = r;
+				char cEnd2 = c;
 				if ((rEnd2 == 0 || rEnd2 == 7) && (cEnd2 == 2 || cEnd2 == 6))
 				{
 					// second piece moving on was king - swap end position
-					short rtmp = rEnd1;
-					short ctmp = cEnd1;
+					char rtmp = rEnd1;
+					char ctmp = cEnd1;
 					rEnd1 = rEnd2;
 					cEnd1 = cEnd2;
 					rEnd2 = rtmp;
