@@ -8,6 +8,7 @@
 #include "driverlib.h"
 
 #include "uart_comm.h"
+#include "board_state.h"
 
 /*
  * UART configuration for Oversampling at 12 MHz clock, Baud Rate 9600
@@ -88,6 +89,53 @@ void helloWorldReceive()
 	// if it does, unlight red LED
 	if (comp) {
 		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
+	}
+}
+
+void send(piece_movement* move)
+{
+	char first = move->rStart * 8 + move->cStart;
+	char second = move->rEnd * 8 + move->cEnd;
+	MAP_UART_transmitData(EUSCI_A0_BASE, first);
+	MAP_UART_transmitData(EUSCI_A0_BASE, second);
+}
+
+signed char receive(piece_movement* move)
+{
+	// spin while ISR fills up receive buffer
+	while (1)
+	{
+		if (gReceiveBufferIndex >= 2)
+		{
+			break;
+		}
+	}
+	// unpack args
+	char first = gReceiveBuffer[0];
+	char second = gReceiveBuffer[1];
+
+	// TODO check for error conditions
+	// if bad code -> return ERROR;
+
+	move->rStart = first / 8;
+	move->cStart = first % 8;
+	move->rEnd = second / 8;
+	move->cEnd = second % 8;
+
+	// reset index, discard any remaining message
+	gReceiveBufferIndex = 0;
+	return TRUE;
+}
+
+void debugGameLoop()
+{
+	piece_movement move;
+	while (1)
+	{
+		// place a breakpoint before sending and modify move through debugger
+		;
+		send(&move);
+		receive(&move);
 	}
 }
 

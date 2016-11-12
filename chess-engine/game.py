@@ -22,23 +22,18 @@ def player_move(node, board):
     player_moved = False
     ser = Comm.getSerial()
     while not player_moved:
-        # Get move
-        try:
-            # Read from serial buffer
-            received = ''
-            while ser.inWaiting() > 0:
-                received += ser.read(5)
+        # throttle the read requests
+        time.sleep(0.05)
 
-            ''' TESTING '''
-            # code = uci_to_int(received.rstrip())
-            ''' TESTING '''
+        # Read from serial buffer
+        received = ''
+        while ser.inWaiting() > 0:
+            received += ser.read(2)
 
-            code = int(received.rstrip())
-            uci = int_to_uci(code)
+        if len(received) == 0:
+            continue    # did not receive anything
 
-        except:
-            # Try again ...
-            continue
+        uci = decode_uci(received)
 
         print "Player move: " + uci
         move = chess.Move.from_uci(uci)
@@ -60,9 +55,8 @@ def computer_move(node, board, engine, difficulty):
 
     # Write move to serial
     ser = Comm.getSerial()
-    code = uci_to_int(str(move))
-    
-    ser.write(str(code))
+    code = encode_uci(str(move))
+    ser.write(code)
 
     node = node.add_variation(move)
     return node
@@ -98,8 +92,8 @@ def main():
 
         while True:
             if board.is_game_over(): break
-            node = computer_move(node, board, engine, 3)
-            # node = player_move(node, board)
+            #node = computer_move(node, board, engine, 3)
+            node = player_move(node, board)
             print board
 
             if board.is_game_over(): break

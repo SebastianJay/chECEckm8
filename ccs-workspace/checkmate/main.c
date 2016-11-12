@@ -20,13 +20,14 @@ void main()
 	MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
 
 	/** Servo debugging **/
-	initMotors();
-	debugServoLoop();
+	//initMotors();
+	//debugServoLoop();
 
 	/** UART debugging **/
-	//initUART();
+	initUART();
 	//helloWorldSend();
 	//helloWorldReceive();
+	debugGameLoop();
 
 	//MAP_Interrupt_enableMaster();
     while(1)

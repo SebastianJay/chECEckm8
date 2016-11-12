@@ -24,12 +24,13 @@ volatile unsigned short gReceiveBufferIndex;
 void initUART();
 
 // send a piece movement to chess server
-void send(piece_movement move);
+void send(piece_movement* move);
 // receive a piece movement response from chess server
-void receive(piece_movement* move);
+signed char receive(piece_movement* move);
 
 // DEBUG functions
 void helloWorldSend();
 void helloWorldReceive();
+void debugGameLoop();
 
 #endif /* UART_COMM_H_ */
