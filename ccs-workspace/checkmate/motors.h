@@ -18,7 +18,7 @@
 // according to datasheet the full range is spanned by 0.75 ms (900 ticks) and 2.25 ms (2700 ticks) pulses
 // in practice it seems we need to stretch these out a bit further
 #define SERVO_PULSE_WIDTH_1			625		// high ticks for servo state 1 (~520 us)
-#define SERVO_PULSE_WIDTH_2			2800	// high ticks for servo state 2 (~2.33 ms)
+#define SERVO_PULSE_WIDTH_2			1700	// high ticks for servo state 2
 
 /** Functions **/
 // do any setup to send commands to motor driver
