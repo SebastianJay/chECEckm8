@@ -26,7 +26,9 @@ void initUART();
 // send a piece movement to chess server
 void send(piece_movement* move);
 // receive a piece movement response from chess server
-signed char receive(piece_movement* move);
+// if other_move is filled, that move should be executed after the first move
+// if a move has (0xFF, 0xFF) as a destination, then it represents a capture
+signed char receive(piece_movement* move, piece_movement* other_move);
 
 // DEBUG functions
 void helloWorldSend();

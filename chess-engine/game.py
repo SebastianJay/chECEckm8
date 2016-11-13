@@ -41,6 +41,16 @@ def player_move(node, board):
         if move in board.legal_moves:
             board.push(move)
             player_moved = True
+        else:
+            # check if promotion is valid by appending 'q'
+            promotion = chess.Move.from_uci(uci + 'q')
+            if promotion in board.legal_moves:
+                board.push(promotion)
+                player_moved = True
+
+        # received an illegal move
+        if not player_moved:
+            ser.write('\xff\xff')   # write the error code back to player and wait
 
     node = node.add_variation(move)
     return node
@@ -55,10 +65,53 @@ def computer_move(node, board, engine, difficulty):
 
     # Write move to serial
     ser = Comm.getSerial()
+
+    # Write auxilary moves, e.g. for capture or special move
+    if board.is_capture(move):
+        capture_tile = ''
+        if board.is_en_passant(move):
+            uci = str(move)
+            if uci[3] == '6':
+                capture_tile = uci[2] + '5'
+            elif uci[3] == '3':
+                capture_tile = uci[2] + '4'
+            else:
+                raise Exception('unknown en passant command ' + str(move))
+        else:
+            capture_tile = str(move)[2:4]
+        code = encode_uci(capture_tile)
+        code = code & 0x8000    # setting MSB tells client to process another move command
+        ser.write(code)
+    elif board.is_castling(move):
+        king_dest = str(move)[2:4]
+        rook_uci = ''
+        if king_dest == 'c1':
+            rook_uci = 'a1d1'
+        elif king_dest == 'c8':
+            rook_uci = 'a8d8'
+        elif king_dest == 'g1':
+            rook_uci = 'h1f1'
+        elif king_dest == 'g8':
+            rook_uci = 'h8f8'
+        else:
+            raise Exception('unknown castling command ' + str(move))
+        code = encode_uci(rook_uci)
+        code = code & 0x8000
+        ser.write(code)
+
+    # write the main move
     code = encode_uci(str(move))
     ser.write(code)
 
     node = node.add_variation(move)
+    return node
+
+def debug_shell_move(node, board):
+    uci = raw_input("Enter move: ").strip()
+    move = chess.Move.from_uci(uci)
+    if move in board.legal_moves:
+        board.push(move)
+        node = node.add_variation(move)
     return node
 
 def main():
@@ -92,13 +145,16 @@ def main():
 
         while True:
             if board.is_game_over(): break
+            #node = player_move(node, board)
             #node = computer_move(node, board, engine, 3)
-            node = player_move(node, board)
+            node = debug_shell_move(node, board)
             print board
 
+            '''
             if board.is_game_over(): break
             node = computer_move(node, board, engine, DIFFICULTY)
             print board
+            '''
 
         print board
         print board.fen()

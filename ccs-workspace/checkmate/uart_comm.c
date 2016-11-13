@@ -100,7 +100,7 @@ void send(piece_movement* move)
 	MAP_UART_transmitData(EUSCI_A0_BASE, second);
 }
 
-signed char receive(piece_movement* move)
+signed char receive(piece_movement* move, piece_movement* other_move)
 {
 	// spin while ISR fills up receive buffer
 	while (1)
@@ -114,8 +114,37 @@ signed char receive(piece_movement* move)
 	char first = gReceiveBuffer[0];
 	char second = gReceiveBuffer[1];
 
-	// TODO check for error conditions
-	// if bad code -> return ERROR;
+	// check for error conditions
+	if (first == 0xFF && second == 0xFF)
+	{
+		return ERROR;
+	}
+	else if ((first & 0x8000) != 0)
+	{
+		// if MSB set, another move is incoming
+		first = first & ~0x8000;
+		while (1)
+		{
+			if (gReceiveBufferIndex >= 4)
+			{
+				break;
+			}
+		}
+		char third = gReceiveBuffer[2];
+		char fourth = gReceiveBuffer[3];
+		other_move->rStart = third / 8;
+		other_move->cStart = third % 8;
+		other_move->rEnd = fourth / 8;
+		other_move->cEnd = fourth % 8;
+	}
+	else
+	{
+		// invalidate other_move so caller knows not to use it
+		other_move->rStart = 0xFF;
+		other_move->cStart = 0xFF;
+		other_move->rEnd = 0xFF;
+		other_move->cEnd = 0xFF;
+	}
 
 	move->rStart = first / 8;
 	move->cStart = first % 8;
