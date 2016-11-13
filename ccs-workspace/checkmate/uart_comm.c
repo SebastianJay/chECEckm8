@@ -159,12 +159,13 @@ signed char receive(piece_movement* move, piece_movement* other_move)
 void debugGameLoop()
 {
 	piece_movement move;
+	piece_movement other;
 	while (1)
 	{
 		// place a breakpoint before sending and modify move through debugger
 		;
 		send(&move);
-		receive(&move);
+		receive(&move, &other);
 	}
 }
 
