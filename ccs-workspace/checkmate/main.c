@@ -2,6 +2,7 @@
 #include "msp.h"
 
 #include "uart_comm.h"
+#include "motors.h"
 
 // Constants
 #define XMOVE 500
@@ -138,6 +139,7 @@ void main()
 {
 	// Stop watchdog timer
 	WDTCTL = WDTPW | WDTHOLD;
+    // MAP_WDT_A_holdTimer();
 
 	// Setup clock
 	MAP_CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_12);
@@ -163,5 +165,23 @@ void main()
 //	move_cursor(&cursor, destination);
 
 	while (1);
+
+
+	// /** Servo debugging **/
+	// //initMotors();
+	// //debugServoLoop();
+
+	// /** UART debugging **/
+	// initUART();
+	// //helloWorldSend();
+	// //helloWorldReceive();
+	// debugGameLoop();
+
+	// //MAP_Interrupt_enableMaster();
+ //    while(1)
+ //    {
+ //        MAP_PCM_gotoLPM0();
+ //    }
+
 }
 

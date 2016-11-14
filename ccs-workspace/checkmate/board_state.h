@@ -25,37 +25,37 @@
 /** Typedefs **/
 typedef struct {
 	// row and col of piece location
-	short r;
-	short c;
+	signed char r;
+	signed char c;
 	// flag for direction of change (piece coming off or on)
-	short dir;
+	char dir;
 
 } piece_change;
 
 typedef struct {
 	// row and col of piece start location
-	short rStart;
-	short cStart;
+	signed char rStart;
+	signed char cStart;
 	// row and col of piece end location
-	short rEnd;
-	short cEnd;
+	signed char rEnd;
+	signed char cEnd;
 } piece_movement;
 
 typedef struct {
 	// most recent valid state
-	short validState[BOARD_ROWS][BOARD_COLS];
+	char validState[BOARD_ROWS][BOARD_COLS];
 	// buffer for current state of board
-	short currentState[BOARD_ROWS][BOARD_COLS];
+	char currentState[BOARD_ROWS][BOARD_COLS];
 	// buffer for most recent read straight from sensor network
-	short nextState[BOARD_ROWS][BOARD_COLS];
+	char nextState[BOARD_ROWS][BOARD_COLS];
 	// counters for each board space of number of frames state has changed
-	short changeStateCounter[BOARD_ROWS][BOARD_COLS];
-	short changeStateBuffer[BOARD_ROWS][BOARD_COLS][MOVES_CHANGE_BUFFER_WINDOW];
-	short changeStateBufferIndex;
+	char changeStateCounter[BOARD_ROWS][BOARD_COLS];
+	char changeStateBuffer[BOARD_ROWS][BOARD_COLS][MOVES_CHANGE_BUFFER_WINDOW];
+	char changeStateBufferIndex;
 
 	// keep track of moves player has made
 	piece_change moveList[MOVES_BUFFER_LENGTH];
-	short moveListIndex;
+	char moveListIndex;
 } chess_board;
 
 /** Globals **/
@@ -69,14 +69,14 @@ void initSensors();
 void updateChangeStateCounter();
 
 // for changes that meet threshold, update currentState and optionally update moveList
-void updateCurrentState(short updateMoveList);
+void updateCurrentState(char updateMoveList);
 
 // in the invalid state, compare currentState against validState and return true if identical
-short isCurrentStateValid();
+signed char isCurrentStateValid();
 
 // examine moveList and return TRUE and write to *move if chess move detected, FALSE otherwise
 // can also return ERROR if an invalid move is detected from MSP
-short constructPieceMovement(piece_movement* move);
+signed char constructPieceMovement(piece_movement* move);
 
 // read from sensor network into nextState
 void readNextState();

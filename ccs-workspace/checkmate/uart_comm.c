@@ -8,6 +8,7 @@
 #include "driverlib.h"
 
 #include "uart_comm.h"
+#include "board_state.h"
 
 /*
  * UART configuration for Oversampling at 12 MHz clock, Baud Rate 9600
@@ -88,6 +89,83 @@ void helloWorldReceive()
 	// if it does, unlight red LED
 	if (comp) {
 		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
+	}
+}
+
+void send(piece_movement* move)
+{
+	char first = move->rStart * 8 + move->cStart;
+	char second = move->rEnd * 8 + move->cEnd;
+	MAP_UART_transmitData(EUSCI_A0_BASE, first);
+	MAP_UART_transmitData(EUSCI_A0_BASE, second);
+}
+
+signed char receive(piece_movement* move, piece_movement* other_move)
+{
+	// spin while ISR fills up receive buffer
+	while (1)
+	{
+		if (gReceiveBufferIndex >= 2)
+		{
+			break;
+		}
+	}
+	// unpack args
+	char first = gReceiveBuffer[0];
+	char second = gReceiveBuffer[1];
+
+	// check for error conditions
+	if (first == 0xFF && second == 0xFF)
+	{
+		return ERROR;
+	}
+	else if ((first & 0x8000) != 0)
+	{
+		// if MSB set, another move is incoming
+		first = first & ~0x8000;
+		while (1)
+		{
+			if (gReceiveBufferIndex >= 4)
+			{
+				break;
+			}
+		}
+		char third = gReceiveBuffer[2];
+		char fourth = gReceiveBuffer[3];
+		other_move->rStart = third / 8;
+		other_move->cStart = third % 8;
+		other_move->rEnd = fourth / 8;
+		other_move->cEnd = fourth % 8;
+	}
+	else
+	{
+		// invalidate other_move so caller knows not to use it
+		other_move->rStart = 0xFF;
+		other_move->cStart = 0xFF;
+		other_move->rEnd = 0xFF;
+		other_move->cEnd = 0xFF;
+	}
+
+	move->rStart = first / 8;
+	move->cStart = first % 8;
+	move->rEnd = second / 8;
+	move->cEnd = second % 8;
+
+	// reset index, discard any remaining message
+	gReceiveBufferIndex = 0;
+	return TRUE;
+}
+
+void debugGameLoop()
+{
+	piece_movement move;
+	piece_movement other;
+	while (1)
+	{
+		// place a breakpoint before sending and modify move through debugger
+		;
+		send(&move);
+		receive(&move, &other);
 	}
 }
 
