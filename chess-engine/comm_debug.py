@@ -1,7 +1,7 @@
 from comm import Comm
 
 def debugReceive():
-    Comm.setPort('COM5')
+    Comm.setPort('/dev/cu.usbmodemM4321001')
     ser = Comm.getSerial()
     print ser.name
     received = ''
@@ -15,7 +15,7 @@ def debugReceive():
             print received
 
 def debugSend():
-    Comm.setPort('COM5')
+    Comm.setPort('/dev/cu.usbmodemM4321001')
     ser = Comm.getSerial()
     print ser.name
     ser.write('Hello world!')

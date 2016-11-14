@@ -98,8 +98,8 @@ def main():
 
         while True:
             if board.is_game_over(): break
-            node = computer_move(node, board, engine, 3)
-            # node = player_move(node, board)
+            # node = computer_move(node, board, engine, 3)
+            node = player_move(node, board)
             print board
 
             if board.is_game_over(): break

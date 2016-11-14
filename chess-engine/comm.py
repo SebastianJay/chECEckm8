@@ -8,7 +8,7 @@ class Comm:
 	def getSerial():
 		if Comm._ser is None:
 			Comm._ser = serial.Serial(
-				port=Comm._portname or '/dev/cu.usbserial-FTZ8NTHG',
+				port=Comm._portname or '/dev/cu.usbmodemM4321001',
 				timeout=0.05,
 				baudrate=9600,
 				stopbits=serial.STOPBITS_ONE,
