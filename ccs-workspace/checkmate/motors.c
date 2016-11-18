@@ -58,7 +58,7 @@ void initMotors()
 	P2OUT &= ~BIT7;
 
 	P2DIR |= BIT6; // Motor driver2 DIR, p2.6, LOW -> DOWN, HIGH -> UP
-	P2OUT &= BIT6; // Init UP
+	P2OUT |= BIT6; // Init UP
 
 	// init globals
 	gTableCursor.r = 0;
@@ -66,50 +66,20 @@ void initMotors()
 }
 
 void debugMotorDemo() {
-	/*
-	uint32_t distance = 0;
-	uint32_t i = 0;
-	while (1) {
-		P2OUT |= BIT5; // ON
-		P2OUT |= BIT7; // ON
-		for(i=500; i>0; i--);
-		P2OUT &= ~BIT5; // OFF
-		P2OUT &= ~BIT7; // OFF
-		for(i=2500; i>0; i--);
+	piece_movement movement;
+	movement.rStart = 0;
+	movement.rEnd = 0;
+	movement.cStart = 0;
+	movement.cEnd = 0;
+	disengageMagnet();
 
-		if (distance % 500 == 0) {
-			P3OUT ^= BIT0;
-		}
-
-		if (distance % 500 == 0) {
-			P2OUT ^= BIT6;
-		}
-
-		distance++;
-	}
-	*/
-
-	//gTableCursor.r = 1;
-	//gTableCursor.c = 1;
-
-	piece_movement m;
-	m.rStart = 0;
-	m.cStart = 0;
-	m.rEnd = 1;
-	m.cEnd = 1;
-	movePiece(m);
-
-	m.rStart = 1;
-	m.cStart = 1;
-	m.rEnd = 0;
-	m.cEnd = 0;
-	movePiece(m);
+	moveXY(movement, 1, 3, 4);
+	moveXY(movement, 0, 0, 0);
 }
 
 void debugServoLoop()
 {
-	while(1)
-	{
+	while(1) {
 		int i;
 		engageMagnet();
 		for (i = 0; i < 1000000; i++);
@@ -166,18 +136,36 @@ void move_y(int num_spaces) {
 	}
 }
 
-void movePiece(piece_movement movement) {
+void goHome(piece_movement movement) {
+	moveXY(movement, 0, 0, 0);
+}
+
+void moveXY(piece_movement movement, int engage, int column, int row) {
+	movement.cStart = gTableCursor.c;
+	movement.cEnd = column;
+	movement.rStart = gTableCursor.r;
+	movement.rEnd = row;
+
+	move(movement, engage);
+}
+
+void move(piece_movement movement, int engage) {
 	// Compute difference from cursor to start location
 	int x_move;
 	int y_move;
 	x_move = movement.cStart - gTableCursor.c;
 	y_move = movement.rStart - gTableCursor.r;
 
-	//disengageMagnet();
-
 	// move to the piece's source
 	move_x(x_move);
 	move_y(y_move);
+
+	if (engage) {
+		engageMagnet();
+	}
+
+	// Wait
+	_delay_cycles(24000000);
 
 	// Compute rank/file
 	if (movement.rEnd == -1 && movement.cEnd == -1)
@@ -190,12 +178,13 @@ void movePiece(piece_movement movement) {
 	x_move = movement.cEnd - movement.cStart;
 	y_move = movement.rEnd - movement.rStart;
 
-	//engageMagnet();
 	// TODO move to corner of square
 
 	// move the piece to the destination
 	move_x(x_move);
 	move_y(y_move);
+
+	disengageMagnet();
 
 	// set cursor to destination
 	gTableCursor.r = movement.rEnd;

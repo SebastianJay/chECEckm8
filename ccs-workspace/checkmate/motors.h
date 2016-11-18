@@ -17,8 +17,10 @@
 #define SERVO_DELAY_BETWEEN_PULSE 	24000	// low ticks
 // according to datasheet the full range is spanned by 0.75 ms (900 ticks) and 2.25 ms (2700 ticks) pulses
 // in practice it seems we need to stretch these out a bit further
-#define SERVO_PULSE_WIDTH_1			625		// high ticks for servo state 1 (~520 us)
-#define SERVO_PULSE_WIDTH_2			1700	// high ticks for servo state 2
+//#define SERVO_PULSE_WIDTH_1			625	// high ticks for servo state 1 (~520 us)
+//#define SERVO_PULSE_WIDTH_2			1700	 // high ticks for servo state 2
+#define SERVO_PULSE_WIDTH_1			1800
+#define SERVO_PULSE_WIDTH_2			2700
 
 #define X_STEP_ON 500	// amount of high ticks for stepping once in x direction
 #define X_STEP_OFF 2500	// amount of low ticks for x stepping
@@ -44,8 +46,11 @@ void engageMagnet();
 // use the servo to move the magnet out of position
 void disengageMagnet();
 
+void goHome(piece_movement movement); // Go home, Dave you're drunk
+void moveXY(piece_movement movement, int engage, int column, int row);
+
 // move a piece from one location to another
-void movePiece(piece_movement movement);
+void move(piece_movement movement, int engage);
 void step_x();
 void move_x(int num_spaces);
 void step_y();

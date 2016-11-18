@@ -7,8 +7,8 @@
 void main()
 {
 	// Stop watchdog timer
-	WDTCTL = WDTPW | WDTHOLD;
-    // MAP_WDT_A_holdTimer();
+//	WDTCTL = WDTPW | WDTHOLD;
+    MAP_WDT_A_holdTimer();
 
 	// Setup clock
 	MAP_CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_12);
@@ -16,7 +16,7 @@ void main()
 
 	/** Servo, motors debugging **/
 	initMotors();
-	//debugServoLoop();
+//	debugServoLoop();
 	debugMotorDemo();
 
 	/** UART debugging **/
@@ -25,9 +25,10 @@ void main()
 	//helloWorldReceive();
 	//debugGameLoop();
 
+	while(1);
 	//MAP_Interrupt_enableMaster();
-     while(1)
-     {
-         MAP_PCM_gotoLPM0();
-     }
+//     while(1)
+//     {
+//         MAP_PCM_gotoLPM0();
+//     }
 }
