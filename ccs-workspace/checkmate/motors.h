@@ -10,23 +10,36 @@
 #ifndef MOTORS_H_
 #define MOTORS_H_
 
+#include "driverlib.h"
 #include "board_state.h"
 
 /** Defines **/
-// corresponds to 20 ms
-#define SERVO_DELAY_BETWEEN_PULSE 	24000	// low ticks
+#define SERVO_DELAY_BETWEEN_PULSE 	24000	// low ticks between pulses, 20 ms
 // according to datasheet the full range is spanned by 0.75 ms (900 ticks) and 2.25 ms (2700 ticks) pulses
 // in practice it seems we need to stretch these out a bit further
-//#define SERVO_PULSE_WIDTH_1			625	// high ticks for servo state 1 (~520 us)
-//#define SERVO_PULSE_WIDTH_2			1700	 // high ticks for servo state 2
-#define SERVO_PULSE_WIDTH_1			1800
-#define SERVO_PULSE_WIDTH_2			2700
+#define SERVO_PULSE_WIDTH_1			1800	// high ticks for engage, 1.5 ms
+#define SERVO_PULSE_WIDTH_2			2700	// high ticks for disengage, 2.25 ms
 
-#define X_STEP_ON 500	// amount of high ticks for stepping once in x direction
-#define X_STEP_OFF 2500	// amount of low ticks for x stepping
-#define Y_STEP_ON 500	// amount of high ticks for stepping once in y direction
-#define Y_STEP_OFF 2500	// amount of low ticks for y stepping
-#define STEPS_PER_SPACE	308 	// number of steps needed to travel one board space
+#define ONE_SECOND_TICKS	12000000
+#define SERVO_ENGAGE_DELAY	ONE_SECOND_TICKS
+#define TABLE_MOVE_DELAY	ONE_SECOND_TICKS / 2
+
+#define X_STEP_ON 500			// high ticks for x stepping
+#define X_STEP_OFF 2500			// low ticks for x stepping
+#define Y_STEP_ON 500			// high ticks for y stepping
+#define Y_STEP_OFF 2500			// low ticks for y stepping
+
+#define STEPS_PER_SPACE	308 	// steps needed to travel one board space
+
+// ports and pins for motor control
+#define X_STEP_PORT	GPIO_PORT_P2
+#define X_STEP_PIN	GPIO_PIN5
+#define X_DIR_PORT	GPIO_PORT_P3
+#define X_DIR_PIN	GPIO_PIN0
+#define Y_STEP_PORT	GPIO_PORT_P2
+#define Y_STEP_PIN	GPIO_PIN7
+#define Y_DIR_PORT	GPIO_PORT_P2
+#define Y_DIR_PIN	GPIO_PIN6
 
 /** Structs **/
 typedef struct {
@@ -46,19 +59,23 @@ void engageMagnet();
 // use the servo to move the magnet out of position
 void disengageMagnet();
 
-void goHome(piece_movement movement); // Go home, Dave you're drunk
-void moveXY(piece_movement movement, int engage, int column, int row);
+// move table cursor to (0, 0), the bottom left corner
+void goHome();
+// move table cursor to (row, column), with option of using servo
+void moveRC(int row, int column, int engage);
 
-// move a piece from one location to another
+// move from one location to another, with option of using servo to magnetically drag piece
 void move(piece_movement movement, int engage);
-void step_x();
-void move_x(int num_spaces);
-void step_y();
-void move_y(int num_spaces);
+// helpers to accomplish move()
+void stepX();
+void stepY();
+void moveX(int num_spaces);
+void moveY(int num_spaces);
 
 // DEBUG functions
 // transitions between engaged and disengaged states forever
 void debugServoLoop();
+// does some simple motor movement
 void debugMotorDemo();
 
 #endif /* MOTORS_H_ */

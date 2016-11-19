@@ -7,7 +7,6 @@
 void main()
 {
 	// Stop watchdog timer
-//	WDTCTL = WDTPW | WDTHOLD;
     MAP_WDT_A_holdTimer();
 
 	// Setup clock
@@ -25,10 +24,9 @@ void main()
 	//helloWorldReceive();
 	//debugGameLoop();
 
-	while(1);
 	//MAP_Interrupt_enableMaster();
-//     while(1)
-//     {
-//         MAP_PCM_gotoLPM0();
-//     }
+     while(1)
+     {
+         MAP_PCM_gotoLPM0();
+     }
 }

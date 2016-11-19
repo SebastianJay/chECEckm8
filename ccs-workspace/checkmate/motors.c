@@ -6,59 +6,58 @@
  */
 
 #include "driverlib.h"
-#include "motors.h"
 #include "board_state.h"
+#include "motors.h"
 
 /*
  * Timer_A PWM Configuration Parameter
- * PWM is used to control the servo
+ * PWM is used to control the servo; initial config has magnet on servo in disengaged state
  */
 Timer_A_PWMConfig pwmConfig =
 {
         TIMER_A_CLOCKSOURCE_SMCLK,
         TIMER_A_CLOCKSOURCE_DIVIDER_10,
-		SERVO_DELAY_BETWEEN_PULSE + SERVO_PULSE_WIDTH_1,
+		SERVO_DELAY_BETWEEN_PULSE + SERVO_PULSE_WIDTH_2,
         TIMER_A_CAPTURECOMPARE_REGISTER_1,
         TIMER_A_OUTPUTMODE_RESET_SET,
-		SERVO_PULSE_WIDTH_1
+		SERVO_PULSE_WIDTH_2
 };
 
 void initMotors()
 {
-	// clock source
+	// clock source for SMCLK
     MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
 
     // choose GPIO pin for PWM
     MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN4, GPIO_PRIMARY_MODULE_FUNCTION);
 
-    /*
-    // TODO understand how to remap pins, so we can possibly change PWM pin from 2.4
-    // Port mapper configuration register
-	const uint8_t port_mapping[] =
-	{
-			//Port P2:
-			PM_TA0CCR0A, PM_TA0CCR0A, PM_TA0CCR0A, PM_NONE, PM_NONE, PM_NONE, PM_NONE, PM_NONE
-	};
-	MAP_PMAP_configurePorts((const uint8_t *) port_mapping, P2MAP, 1, PMAP_DISABLE_RECONFIGURATION);
-	*/
-
     // Configure Timer A PWM
     MAP_Timer_A_generatePWM(TIMER_A0_BASE, &pwmConfig);
 
     // Configure motor driver pins
-	// X AXIS
-	P2DIR |= BIT5; // Motor driver1 STEP, p2.5
-	P2OUT &= ~BIT5;
+	// X axis STEP
+	MAP_GPIO_setAsOutputPin(X_STEP_PORT, X_STEP_PIN);
+	MAP_GPIO_setOutputLowOnPin(X_STEP_PORT, X_STEP_PIN);
+	//P2DIR |= BIT5; // Motor driver1 STEP, p2.5
+	//P2OUT &= ~BIT5;
 
-	P3DIR |= BIT0; // Motor driver1 DIR, p3.0, LOW -> RIGHT, HIGH -> LEFT
-	P3OUT &= ~BIT0; // Init RIGHT
+	// X axis DIR: LOW -> RIGHT, HIGH -> LEFT
+	MAP_GPIO_setAsOutputPin(X_DIR_PORT, X_DIR_PIN);
+	MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);
+	//P3DIR |= BIT0; // Motor driver1 DIR, p3.0, LOW -> RIGHT, HIGH -> LEFT
+	//P3OUT &= ~BIT0; // Init RIGHT
 
-	// Y AXIS
-	P2DIR |= BIT7; // Motor driver2 STEP, p2.7
-	P2OUT &= ~BIT7;
+	// Y axis STEP
+	MAP_GPIO_setAsOutputPin(Y_STEP_PORT, Y_STEP_PIN);
+	MAP_GPIO_setOutputLowOnPin(Y_STEP_PORT, Y_STEP_PIN);
+	//P2DIR |= BIT7; // Motor driver2 STEP, p2.7
+	//P2OUT &= ~BIT7;
 
-	P2DIR |= BIT6; // Motor driver2 DIR, p2.6, LOW -> DOWN, HIGH -> UP
-	P2OUT |= BIT6; // Init UP
+	// Y axis DIR: LOW -> DOWN, HIGH -> UP
+	MAP_GPIO_setAsOutputPin(Y_DIR_PORT, Y_DIR_PIN);
+	MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);
+	//P2DIR |= BIT6; // Motor driver2 DIR, p2.6, LOW -> DOWN, HIGH -> UP
+	//P2OUT |= BIT6; // Init UP
 
 	// init globals
 	gTableCursor.r = 0;
@@ -66,15 +65,11 @@ void initMotors()
 }
 
 void debugMotorDemo() {
-	piece_movement movement;
-	movement.rStart = 0;
-	movement.rEnd = 0;
-	movement.cStart = 0;
-	movement.cEnd = 0;
 	disengageMagnet();
 
-	moveXY(movement, 1, 3, 4);
-	moveXY(movement, 0, 0, 0);
+	goHome();
+	moveRC(1, 2, TRUE);
+	moveRC(0, 0, TRUE);
 }
 
 void debugServoLoop()
@@ -88,59 +83,80 @@ void debugServoLoop()
 	}
 }
 
-void step_x() {
+void stepX() {
+	MAP_GPIO_setOutputHighOnPin(X_STEP_PORT, X_STEP_PIN);
+	//P2OUT |= BIT5; // ON
+	//_delay_cycles(X_STEP_ON);
 	int i;
-	P2OUT |= BIT5; // ON
 	for(i=X_STEP_ON; i>0; i--);
-	P2OUT &= ~BIT5; // OFF
+	MAP_GPIO_setOutputLowOnPin(X_STEP_PORT, X_STEP_PIN);
+	//P2OUT &= ~BIT5; // OFF
+	//_delay_cycles(X_STEP_OFF);
 	for(i=X_STEP_OFF; i>0; i--);
 }
 
-void move_x(int num_spaces) {
+void moveX(int num_spaces) {
+	if (num_spaces == 0) {
+		return;
+	}
 	if (num_spaces < 0) {
 		num_spaces = -num_spaces;
-		P3OUT |= BIT0;	// set direction left
+		MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
+		//P3OUT |= BIT0;	// set direction left
 	} else {
-		P3OUT &= ~BIT0;	// set direction right
+		MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
+		//P3OUT &= ~BIT0;	// set direction right
 	}
 	int i;
 	int j;
 	for (i = 0; i < num_spaces; i++) {
 		for (j = 0; j < STEPS_PER_SPACE; j++) {
-			step_x();
+			stepX();
 		}
 	}
+	_delay_cycles(TABLE_MOVE_DELAY);
 }
 
-void step_y() {
+void stepY() {
+	MAP_GPIO_setOutputHighOnPin(Y_STEP_PORT, Y_STEP_PIN);
+	//P2OUT |= BIT7; // ON
+	//_delay_cycles(Y_STEP_ON);
 	int i;
-	P2OUT |= BIT7; // ON
 	for(i=Y_STEP_ON; i>0; i--);
-	P2OUT &= ~BIT7; // OFF
+	MAP_GPIO_setOutputLowOnPin(Y_STEP_PORT, Y_STEP_PIN);
+	//P2OUT &= ~BIT7; // OFF
+	//_delay_cycles(Y_STEP_OFF);
 	for(i=Y_STEP_OFF; i>0; i--);
 }
 
-void move_y(int num_spaces) {
+void moveY(int num_spaces) {
+	if (num_spaces == 0) {
+		return;
+	}
 	if (num_spaces < 0) {
 		num_spaces = -num_spaces;
-		P2OUT &= ~BIT6;	// set direction down
+		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
+		//P2OUT &= ~BIT6;	// set direction down
 	} else {
-		P2OUT |= BIT6;	// set direction up
+		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
+		//P2OUT |= BIT6;	// set direction up
 	}
 	int i;
 	int j;
 	for (i = 0; i < num_spaces; i++) {
 		for (j = 0; j < STEPS_PER_SPACE; j++) {
-			step_y();
+			stepY();
 		}
 	}
+	_delay_cycles(TABLE_MOVE_DELAY);
 }
 
-void goHome(piece_movement movement) {
-	moveXY(movement, 0, 0, 0);
+void goHome() {
+	moveRC(0, 0, FALSE);
 }
 
-void moveXY(piece_movement movement, int engage, int column, int row) {
+void moveRC(int row, int column, int engage) {
+	piece_movement movement;
 	movement.cStart = gTableCursor.c;
 	movement.cEnd = column;
 	movement.rStart = gTableCursor.r;
@@ -157,17 +173,13 @@ void move(piece_movement movement, int engage) {
 	y_move = movement.rStart - gTableCursor.r;
 
 	// move to the piece's source
-	move_x(x_move);
-	move_y(y_move);
+	moveX(x_move);
+	moveY(y_move);
 
 	if (engage) {
 		engageMagnet();
 	}
 
-	// Wait
-	_delay_cycles(24000000);
-
-	// Compute rank/file
 	if (movement.rEnd == -1 && movement.cEnd == -1)
 	{
 		// TODO move piece to capture space
@@ -181,10 +193,14 @@ void move(piece_movement movement, int engage) {
 	// TODO move to corner of square
 
 	// move the piece to the destination
-	move_x(x_move);
-	move_y(y_move);
+	moveX(x_move);
+	moveY(y_move);
 
-	disengageMagnet();
+	// TODO move to center of square
+
+	if (engage) {
+		disengageMagnet();
+	}
 
 	// set cursor to destination
 	gTableCursor.r = movement.rEnd;
@@ -196,7 +212,7 @@ void engageMagnet()
 	pwmConfig.timerPeriod = SERVO_DELAY_BETWEEN_PULSE + SERVO_PULSE_WIDTH_1;
 	pwmConfig.dutyCycle = SERVO_PULSE_WIDTH_1;
 	MAP_Timer_A_generatePWM(TIMER_A0_BASE, &pwmConfig);
-	// could use busy loop so action completes before code proceeds
+	_delay_cycles(SERVO_ENGAGE_DELAY);
 }
 
 void disengageMagnet()
@@ -204,5 +220,5 @@ void disengageMagnet()
 	pwmConfig.timerPeriod = SERVO_DELAY_BETWEEN_PULSE + SERVO_PULSE_WIDTH_2;
 	pwmConfig.dutyCycle = SERVO_PULSE_WIDTH_2;
 	MAP_Timer_A_generatePWM(TIMER_A0_BASE, &pwmConfig);
-	// could use busy loop so action completes before code proceeds
+	_delay_cycles(SERVO_ENGAGE_DELAY);
 }
