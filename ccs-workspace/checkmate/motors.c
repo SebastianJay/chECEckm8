@@ -68,8 +68,8 @@ void debugMotorDemo() {
 	disengageMagnet();
 
 	goHome();
-	moveRC(1, 2, TRUE);
-	moveRC(0, 0, TRUE);
+	moveRC(0, 7, FALSE);
+	moveRC(0, 0, FALSE);
 }
 
 void debugServoLoop()
@@ -110,7 +110,7 @@ void moveX(int num_spaces) {
 		}
 	}
 	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
-	_delay_cycles(TABLE_MOVE_DELAY);
+	_delay_cycles(MOTOR_MOVE_DELAY);
 }
 
 void stepY() {
@@ -140,7 +140,7 @@ void moveY(int num_spaces) {
 		}
 	}
 	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
-	_delay_cycles(TABLE_MOVE_DELAY);
+	_delay_cycles(MOTOR_MOVE_DELAY);
 }
 
 void goHome() {

@@ -20,16 +20,20 @@
 #define SERVO_PULSE_WIDTH_1			1800	// high ticks for engage, 1.5 ms
 #define SERVO_PULSE_WIDTH_2			2700	// high ticks for disengage, 2.25 ms
 
+// delays associated with motor components
 #define ONE_SECOND_TICKS	12000000
-#define SERVO_ENGAGE_DELAY	ONE_SECOND_TICKS
-#define TABLE_MOVE_DELAY	ONE_SECOND_TICKS / 2
+#define SERVO_ENGAGE_DELAY	ONE_SECOND_TICKS * 3 / 2	// ticks after switching the servo state (1.5 s)
+#define MOTOR_MOVE_DELAY	ONE_SECOND_TICKS / 2	// ticks after completing a motor movement (0.5 s)
+#define MOTOR_AWAKE_DELAY	ONE_SECOND_TICKS / 250	// ticks after awaking motor so it can "boot" (4 ms)
 
-// these values are derived to apply 400 Hz square wave to STEP
-#define X_STEP_TICKS 	15000		// ticks to wait in high or low for x stepping
-#define Y_STEP_TICKS 	15000		// ticks to wait in high or low for y stepping
-#define MOTOR_AWAKE_DELAY	48000	// ticks after awaking motor so it can "boot" (4 ms)
+// these values are derived to apply 6400 Hz square wave to STEP
+#define X_STEP_TICKS 	938		// ticks to wait in high or low for x stepping
+#define Y_STEP_TICKS 	938		// ticks to wait in high or low for y stepping
 
-#define STEPS_PER_SPACE	308 	// steps needed to travel one board space
+// STEPS_PER_SPACE = steps needed to travel one chess board space
+// to calculate this, choose an arbitrary step count and measure its corresponding distance
+//  then use a ratio with your desired distance to find the required step count
+#define STEPS_PER_SPACE	10060
 
 // ports and pins for motor control
 #define X_STEP_PORT		GPIO_PORT_P2
