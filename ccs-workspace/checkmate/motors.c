@@ -43,6 +43,10 @@ void initMotors()
 	MAP_GPIO_setAsOutputPin(X_DIR_PORT, X_DIR_PIN);
 	MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);
 
+	// X axis SLEEP
+	MAP_GPIO_setAsOutputPin(X_SLEEP_PORT, X_SLEEP_PIN);
+	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+
 	// Y axis STEP
 	MAP_GPIO_setAsOutputPin(Y_STEP_PORT, Y_STEP_PIN);
 	MAP_GPIO_setOutputLowOnPin(Y_STEP_PORT, Y_STEP_PIN);
@@ -50,6 +54,10 @@ void initMotors()
 	// Y axis DIR: LOW -> DOWN, HIGH -> UP
 	MAP_GPIO_setAsOutputPin(Y_DIR_PORT, Y_DIR_PIN);
 	MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);
+
+	// Y axis SLEEP
+	MAP_GPIO_setAsOutputPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 
 	// init globals
 	gTableCursor.r = 0;
@@ -86,6 +94,8 @@ void moveX(int num_spaces) {
 	if (num_spaces == 0) {
 		return;
 	}
+	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+	_delay_cycles(MOTOR_AWAKE_DELAY);
 	if (num_spaces < 0) {
 		num_spaces = -num_spaces;
 		MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
@@ -99,6 +109,7 @@ void moveX(int num_spaces) {
 			stepX();
 		}
 	}
+	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
 	_delay_cycles(TABLE_MOVE_DELAY);
 }
 
@@ -113,6 +124,8 @@ void moveY(int num_spaces) {
 	if (num_spaces == 0) {
 		return;
 	}
+	MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+	_delay_cycles(MOTOR_AWAKE_DELAY);
 	if (num_spaces < 0) {
 		num_spaces = -num_spaces;
 		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
@@ -126,6 +139,7 @@ void moveY(int num_spaces) {
 			stepY();
 		}
 	}
+	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 	_delay_cycles(TABLE_MOVE_DELAY);
 }
 
