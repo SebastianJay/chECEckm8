@@ -38,26 +38,18 @@ void initMotors()
 	// X axis STEP
 	MAP_GPIO_setAsOutputPin(X_STEP_PORT, X_STEP_PIN);
 	MAP_GPIO_setOutputLowOnPin(X_STEP_PORT, X_STEP_PIN);
-	//P2DIR |= BIT5; // Motor driver1 STEP, p2.5
-	//P2OUT &= ~BIT5;
 
 	// X axis DIR: LOW -> RIGHT, HIGH -> LEFT
 	MAP_GPIO_setAsOutputPin(X_DIR_PORT, X_DIR_PIN);
 	MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);
-	//P3DIR |= BIT0; // Motor driver1 DIR, p3.0, LOW -> RIGHT, HIGH -> LEFT
-	//P3OUT &= ~BIT0; // Init RIGHT
 
 	// Y axis STEP
 	MAP_GPIO_setAsOutputPin(Y_STEP_PORT, Y_STEP_PIN);
 	MAP_GPIO_setOutputLowOnPin(Y_STEP_PORT, Y_STEP_PIN);
-	//P2DIR |= BIT7; // Motor driver2 STEP, p2.7
-	//P2OUT &= ~BIT7;
 
 	// Y axis DIR: LOW -> DOWN, HIGH -> UP
 	MAP_GPIO_setAsOutputPin(Y_DIR_PORT, Y_DIR_PIN);
 	MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);
-	//P2DIR |= BIT6; // Motor driver2 DIR, p2.6, LOW -> DOWN, HIGH -> UP
-	//P2OUT |= BIT6; // Init UP
 
 	// init globals
 	gTableCursor.r = 0;
@@ -85,14 +77,9 @@ void debugServoLoop()
 
 void stepX() {
 	MAP_GPIO_setOutputHighOnPin(X_STEP_PORT, X_STEP_PIN);
-	//P2OUT |= BIT5; // ON
-	//_delay_cycles(X_STEP_ON);
-	int i;
-	for(i=X_STEP_ON; i>0; i--);
+	_delay_cycles(X_STEP_TICKS);
 	MAP_GPIO_setOutputLowOnPin(X_STEP_PORT, X_STEP_PIN);
-	//P2OUT &= ~BIT5; // OFF
-	//_delay_cycles(X_STEP_OFF);
-	for(i=X_STEP_OFF; i>0; i--);
+	_delay_cycles(X_STEP_TICKS);
 }
 
 void moveX(int num_spaces) {
@@ -102,10 +89,8 @@ void moveX(int num_spaces) {
 	if (num_spaces < 0) {
 		num_spaces = -num_spaces;
 		MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
-		//P3OUT |= BIT0;	// set direction left
 	} else {
 		MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
-		//P3OUT &= ~BIT0;	// set direction right
 	}
 	int i;
 	int j;
@@ -119,14 +104,9 @@ void moveX(int num_spaces) {
 
 void stepY() {
 	MAP_GPIO_setOutputHighOnPin(Y_STEP_PORT, Y_STEP_PIN);
-	//P2OUT |= BIT7; // ON
-	//_delay_cycles(Y_STEP_ON);
-	int i;
-	for(i=Y_STEP_ON; i>0; i--);
+	_delay_cycles(Y_STEP_TICKS);
 	MAP_GPIO_setOutputLowOnPin(Y_STEP_PORT, Y_STEP_PIN);
-	//P2OUT &= ~BIT7; // OFF
-	//_delay_cycles(Y_STEP_OFF);
-	for(i=Y_STEP_OFF; i>0; i--);
+	_delay_cycles(Y_STEP_TICKS);
 }
 
 void moveY(int num_spaces) {
@@ -136,10 +116,8 @@ void moveY(int num_spaces) {
 	if (num_spaces < 0) {
 		num_spaces = -num_spaces;
 		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
-		//P2OUT &= ~BIT6;	// set direction down
 	} else {
 		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
-		//P2OUT |= BIT6;	// set direction up
 	}
 	int i;
 	int j;

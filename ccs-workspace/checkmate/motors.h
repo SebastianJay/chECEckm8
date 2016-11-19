@@ -24,10 +24,9 @@
 #define SERVO_ENGAGE_DELAY	ONE_SECOND_TICKS
 #define TABLE_MOVE_DELAY	ONE_SECOND_TICKS / 2
 
-#define X_STEP_ON 500			// high ticks for x stepping
-#define X_STEP_OFF 2500			// low ticks for x stepping
-#define Y_STEP_ON 500			// high ticks for y stepping
-#define Y_STEP_OFF 2500			// low ticks for y stepping
+// these values are derived to apply 400 Hz square wave to STEP
+#define X_STEP_TICKS 	15000		// ticks to wait in high or low for x stepping
+#define Y_STEP_TICKS 	15000		// ticks to wait in high or low for y stepping
 
 #define STEPS_PER_SPACE	308 	// steps needed to travel one board space
 
