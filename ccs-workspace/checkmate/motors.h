@@ -30,10 +30,11 @@
 #define X_STEP_TICKS 	938		// ticks to wait in high or low for x stepping
 #define Y_STEP_TICKS 	938		// ticks to wait in high or low for y stepping
 
-// STEPS_PER_SPACE = steps needed to travel one chess board space
+// STEPS_PER_SPACE = steps needed to travel one chess board space (3.7 in)
 // to calculate this, choose an arbitrary step count and measure its corresponding distance
 //  then use a ratio with your desired distance to find the required step count
 #define STEPS_PER_SPACE	10060
+#define STEPS_PER_HALF_SPACE	10060 / 2	// used to travel between center and corner
 
 // ports and pins for motor control
 #define X_STEP_PORT		GPIO_PORT_P2
@@ -68,17 +69,20 @@ void engageMagnet();
 void disengageMagnet();
 
 // move table cursor to (0, 0), the bottom left corner
-void goHome();
+void moveToHome();
 // move table cursor to (row, column), with option of using servo
 void moveRC(int row, int column, int engage);
 
 // move from one location to another, with option of using servo to magnetically drag piece
 void move(piece_movement movement, int engage);
 // helpers to accomplish move()
-void stepX();
-void stepY();
-void moveX(int num_spaces);
-void moveY(int num_spaces);
+void moveX(int num_spaces);		// moves along the x axis (between columns)
+void moveY(int num_spaces);		// moves along the y axis (between rows)
+void stepX();		// sends STEP to x axis motor
+void stepY();		// sends STEP to y axis motor
+
+// move between the center and corner of a board space
+void moveBetweenCornerAndCenter(int toCorner);
 
 // DEBUG functions
 // transitions between engaged and disengaged states forever

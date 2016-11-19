@@ -67,9 +67,9 @@ void initMotors()
 void debugMotorDemo() {
 	disengageMagnet();
 
-	goHome();
-	moveRC(0, 7, FALSE);
-	moveRC(0, 0, FALSE);
+	moveToHome();
+	moveRC(1, 2, TRUE);
+	moveToHome();
 }
 
 void debugServoLoop()
@@ -91,7 +91,7 @@ void stepX() {
 }
 
 void moveX(int num_spaces) {
-	if (num_spaces == 0) {
+	if (num_spaces == 0 || num_spaces <= -8 || num_spaces >= 8) {
 		return;
 	}
 	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
@@ -121,7 +121,7 @@ void stepY() {
 }
 
 void moveY(int num_spaces) {
-	if (num_spaces == 0) {
+	if (num_spaces == 0 || num_spaces <= -8 || num_spaces >= 8) {
 		return;
 	}
 	MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
@@ -143,7 +143,29 @@ void moveY(int num_spaces) {
 	_delay_cycles(MOTOR_MOVE_DELAY);
 }
 
-void goHome() {
+void moveBetweenCornerAndCenter(int toCorner) {
+	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+	MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+	_delay_cycles(MOTOR_AWAKE_DELAY);
+	if (toCorner) {
+		MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
+		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
+	} else {
+		MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
+		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
+	}
+	int j;
+	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
+		// interleave steps to both motors
+		stepX();
+		stepY();
+	}
+	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+	_delay_cycles(MOTOR_MOVE_DELAY);
+}
+
+void moveToHome() {
 	moveRC(0, 0, FALSE);
 }
 
@@ -169,7 +191,10 @@ void move(piece_movement movement, int engage) {
 	moveY(y_move);
 
 	if (engage) {
+		// pull magnet up
 		engageMagnet();
+		// move to corner of square (to avoid collisions)
+		moveBetweenCornerAndCenter(TRUE);
 	}
 
 	if (movement.rEnd == -1 && movement.cEnd == -1)
@@ -182,15 +207,14 @@ void move(piece_movement movement, int engage) {
 	x_move = movement.cEnd - movement.cStart;
 	y_move = movement.rEnd - movement.rStart;
 
-	// TODO move to corner of square
-
 	// move the piece to the destination
 	moveX(x_move);
 	moveY(y_move);
 
-	// TODO move to center of square
-
 	if (engage) {
+		// move to center of square
+		moveBetweenCornerAndCenter(FALSE);
+		// pull magnet down
 		disengageMagnet();
 	}
 
