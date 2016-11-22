@@ -29,7 +29,7 @@ const eUSCI_UART_Config uartConfig =
 		EUSCI_A_UART_OVERSAMPLING_BAUDRATE_GENERATION	// oversampling mode
 };
 
-/* EUSCI A0 UART ISR - Echoes data back to PC host */
+/* EUSCI A0 UART ISR  */
 void EUSCIA0_IRQHandler(void)
 {
     uint32_t status = MAP_UART_getEnabledInterruptStatus(EUSCI_A0_BASE);
@@ -46,58 +46,61 @@ void EUSCIA0_IRQHandler(void)
 
 }
 
-void helloWorldSend()
+/* EUSCI A2 UART ISR  */
+void EUSCIA2_IRQHandler(void)
 {
-	const char* testMessage = "Hello world!";
-	const int len = 12;
-	int i;
-	for (i = 0; i < len; i++)
-	{
-		// transmit will block until transmit flag is reset
-		MAP_UART_transmitData(EUSCI_A0_BASE, testMessage[i]);
-	}
+    uint32_t status = MAP_UART_getEnabledInterruptStatus(EUSCI_A2_BASE);
+    MAP_UART_clearInterruptFlag(EUSCI_A2_BASE, status);
+
+    if(status & EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG)
+    {
+		gReceiveBuffer[gReceiveBufferIndex++] = MAP_UART_receiveData(EUSCI_A2_BASE);
+		if (gReceiveBufferIndex >= UART_RECEIVE_BUFFER_LENGTH)
+		{
+			gReceiveBufferIndex = 0;
+		}
+    }
+
 }
 
-void helloWorldReceive()
+void initUART()
 {
-	// light red LED
-	MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
+	// init globals
+	gReceiveBufferIndex = 0;
 
-	// spin while ISR fills up receive buffer
-	while (1)
-	{
-		if (gReceiveBufferIndex >= 12)
-		{
-			break;
-		}
-	}
+	// init USCI module
+	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
+			GPIO_PIN0, GPIO_PRIMARY_MODULE_FUNCTION);
+	MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
+	MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0);
 
-	// check if message matches
-	const char* compareMessage = "Hello world!";
-	const int len = 12;
-	int i;
-	int comp = 1;
-	for (i = 0; i < len; i++)
-	{
-		if (compareMessage[i] != gReceiveBuffer[i])
-		{
-			comp = 0;
-			break;
-		}
-	}
+	//MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
+	//		GPIO_PIN2 | GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
+	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3,
+			GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION);
+	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P3,
+			GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
+	//MAP_GPIO_setAsInputPin(GPIO_PORT_P4, GPIO_PIN1);
 
-	// if it does, unlight red LED
-	if (comp) {
-		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
-	}
+	//MAP_UART_initModule(EUSCI_A0_BASE, &uartConfig);
+	//MAP_UART_enableModule(EUSCI_A0_BASE);
+	MAP_UART_initModule(EUSCI_A2_BASE, &uartConfig);
+	MAP_UART_enableModule(EUSCI_A2_BASE);
+
+	//MAP_UART_enableInterrupt(EUSCI_A0_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT);
+	//MAP_Interrupt_enableInterrupt(INT_EUSCIA0);
+	MAP_UART_enableInterrupt(EUSCI_A2_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT);
+	MAP_Interrupt_enableInterrupt(INT_EUSCIA2);
 }
 
 void send(piece_movement* move)
 {
 	char first = move->rStart * 8 + move->cStart;
 	char second = move->rEnd * 8 + move->cEnd;
-	MAP_UART_transmitData(EUSCI_A0_BASE, first);
-	MAP_UART_transmitData(EUSCI_A0_BASE, second);
+	//MAP_UART_transmitData(EUSCI_A0_BASE, first);
+	//MAP_UART_transmitData(EUSCI_A0_BASE, second);
+	MAP_UART_transmitData(EUSCI_A2_BASE, first);
+	MAP_UART_transmitData(EUSCI_A2_BASE, second);
 }
 
 signed char receive(piece_movement* move, piece_movement* other_move)
@@ -114,15 +117,15 @@ signed char receive(piece_movement* move, piece_movement* other_move)
 	char first = gReceiveBuffer[0];
 	char second = gReceiveBuffer[1];
 
-	// check for error conditions
 	if (first == 0xFF && second == 0xFF)
 	{
+		// response was error - previous human move was invalid
 		return ERROR;
 	}
-	else if ((first & 0x8000) != 0)
+	else if ((first & 0x80) != 0)
 	{
 		// if MSB set, another move is incoming
-		first = first & ~0x8000;
+		first = first & ~0x80;
 		while (1)
 		{
 			if (gReceiveBufferIndex >= 4)
@@ -169,23 +172,49 @@ void debugGameLoop()
 	}
 }
 
-void initUART()
+void helloWorldSend()
 {
-	// init globals
-	gReceiveBufferIndex = 0;
+	const char* testMessage = "Hello world!";
+	const int len = 12;
+	int i;
+	for (i = 0; i < len; i++)
+	{
+		// transmit will block until transmit flag is reset
+		//MAP_UART_transmitData(EUSCI_A0_BASE, testMessage[i]);
+		MAP_UART_transmitData(EUSCI_A2_BASE, testMessage[i]);
+	}
+}
 
-	// init USCI module
-	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
-			GPIO_PIN0, GPIO_PRIMARY_MODULE_FUNCTION);
-	MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
-	MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0);
+void helloWorldReceive()
+{
+	// light red LED
+	MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
 
-	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
-			GPIO_PIN2 | GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
+	// spin while ISR fills up receive buffer
+	while (1)
+	{
+		if (gReceiveBufferIndex >= 12)
+		{
+			break;
+		}
+	}
 
-	MAP_UART_initModule(EUSCI_A0_BASE, &uartConfig);
-	MAP_UART_enableModule(EUSCI_A0_BASE);
+	// check if message matches
+	const char* compareMessage = "Hello world!";
+	const int len = 12;
+	int i;
+	int comp = 1;
+	for (i = 0; i < len; i++)
+	{
+		if (compareMessage[i] != gReceiveBuffer[i])
+		{
+			comp = 0;
+			break;
+		}
+	}
 
-	MAP_UART_enableInterrupt(EUSCI_A0_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT);
-	MAP_Interrupt_enableInterrupt(INT_EUSCIA0);
+	// if it does, unlight red LED
+	if (comp) {
+		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
+	}
 }
