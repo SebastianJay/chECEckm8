@@ -10,6 +10,16 @@
 
 void initSensors()
 {
+	// init pins
+	MAP_GPIO_setAsOutputPin(MUX_SELECT1_PORT, MUX_SELECT1_PIN);
+	MAP_GPIO_setAsOutputPin(MUX_SELECT2_PORT, MUX_SELECT2_PIN);
+	MAP_GPIO_setAsOutputPin(MUX_SELECT3_PORT, MUX_SELECT3_PIN);
+	MAP_GPIO_setAsOutputPin(MUX_SELECT4_PORT, MUX_SELECT4_PIN);
+	MAP_GPIO_setAsInputPin(MUX_READ1_PORT, MUX_READ1_PIN);
+	//MAP_GPIO_setAsInputPin(MUX_READ2_PORT, MUX_READ2_PIN);
+	//MAP_GPIO_setAsInputPin(MUX_READ3_PORT, MUX_READ3_PIN);
+	//MAP_GPIO_setAsInputPin(MUX_READ4_PORT, MUX_READ4_PIN);
+
 	// init globals
 	char r, c, i;
 	for (r = 0; r < BOARD_ROWS; r++)
@@ -29,7 +39,52 @@ void initSensors()
 	}
 	gBoardState.moveListIndex = 0;
 	gBoardState.changeStateBufferIndex = 0;
+}
 
+void readNextState()
+{
+	int i;
+	unsigned int test = 0;	// debugging
+	for (i = 0; i < 16; i++)
+	{
+		// set the select bits for the mux
+		char bit1 = ((i & 0x1) != 0) ? 1 : 0;
+		char bit2 = ((i & 0x2) != 0) ? 1 : 0;
+		char bit3 = ((i & 0x4) != 0) ? 1 : 0;
+		char bit4 = ((i & 0x8) != 0) ? 1 : 0;
+		if (bit1) {
+			MAP_GPIO_setOutputHighOnPin(MUX_SELECT1_PORT, MUX_SELECT1_PIN);
+		} else {
+			MAP_GPIO_setOutputLowOnPin(MUX_SELECT1_PORT, MUX_SELECT1_PIN);
+		}
+		if (bit2) {
+			MAP_GPIO_setOutputHighOnPin(MUX_SELECT2_PORT, MUX_SELECT2_PIN);
+		} else {
+			MAP_GPIO_setOutputLowOnPin(MUX_SELECT2_PORT, MUX_SELECT2_PIN);
+		}
+		if (bit3) {
+			MAP_GPIO_setOutputHighOnPin(MUX_SELECT3_PORT, MUX_SELECT3_PIN);
+		} else {
+			MAP_GPIO_setOutputLowOnPin(MUX_SELECT3_PORT, MUX_SELECT3_PIN);
+		}
+		if (bit4) {
+			MAP_GPIO_setOutputHighOnPin(MUX_SELECT4_PORT, MUX_SELECT4_PIN);
+		} else {
+			MAP_GPIO_setOutputLowOnPin(MUX_SELECT4_PORT, MUX_SELECT4_PIN);
+		}
+
+		int value;
+		value = MAP_GPIO_getInputPinValue(MUX_READ1_PORT, MUX_READ1_PIN);
+		int piece = (value == GPIO_INPUT_PIN_HIGH) ? 1 : 0;
+		// TODO read from other 3 muxes
+
+		// TODO manual muxing here
+		gBoardState.nextState[i / 2][i % 2] = piece;
+
+		// debugging
+		test = test << 1;
+		test |= piece;
+	}
 }
 
 void updateChangeStateCounter()

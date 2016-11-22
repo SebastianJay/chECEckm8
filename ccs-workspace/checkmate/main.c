@@ -3,6 +3,7 @@
 
 #include "uart_comm.h"
 #include "motors.h"
+#include "board_state.h"
 
 void main()
 {
@@ -14,9 +15,9 @@ void main()
 	MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
 
 	/** Servo, motors debugging **/
-	initMotors();
-//	debugServoLoop();
-	debugMotorDemo();
+	//initMotors();
+	//debugServoLoop();
+	//debugMotorDemo();
 
 	/** UART debugging **/
 	//initUART();
@@ -24,9 +25,20 @@ void main()
 	//helloWorldReceive();
 	//debugGameLoop();
 
+	/** Piece sensing debugging **/
+	//initSensors();
+//	while (1)
+//	{
+//		;
+//		readNextState();
+//		chess_board local = gBoardState;
+//		;
+//		_delay_cycles(5000);
+//	}
+
 	//MAP_Interrupt_enableMaster();
-     while(1)
-     {
-         MAP_PCM_gotoLPM0();
-     }
+    while(1)
+    {
+        MAP_PCM_gotoLPM0();
+    }
 }
