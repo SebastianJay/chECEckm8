@@ -32,35 +32,28 @@ const eUSCI_UART_Config uartConfig =
 /* EUSCI A0 UART ISR  */
 void EUSCIA0_IRQHandler(void)
 {
-    uint32_t status = MAP_UART_getEnabledInterruptStatus(EUSCI_A0_BASE);
-    MAP_UART_clearInterruptFlag(EUSCI_A0_BASE, status);
-
-    if(status & EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG)
-    {
-		gReceiveBuffer[gReceiveBufferIndex++] = MAP_UART_receiveData(EUSCI_A0_BASE);
-		if (gReceiveBufferIndex >= UART_RECEIVE_BUFFER_LENGTH)
-		{
-			gReceiveBufferIndex = 0;
-		}
-    }
-
+	uartReceiveISR();
 }
 
 /* EUSCI A2 UART ISR  */
 void EUSCIA2_IRQHandler(void)
 {
-    uint32_t status = MAP_UART_getEnabledInterruptStatus(EUSCI_A2_BASE);
-    MAP_UART_clearInterruptFlag(EUSCI_A2_BASE, status);
+	uartReceiveISR();
+}
+
+void uartReceiveISR()
+{
+    uint32_t status = MAP_UART_getEnabledInterruptStatus(UART_EUSCI_BASE);
+    MAP_UART_clearInterruptFlag(UART_EUSCI_BASE, status);
 
     if(status & EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG)
     {
-		gReceiveBuffer[gReceiveBufferIndex++] = MAP_UART_receiveData(EUSCI_A2_BASE);
+		gReceiveBuffer[gReceiveBufferIndex++] = MAP_UART_receiveData(UART_EUSCI_BASE);
 		if (gReceiveBufferIndex >= UART_RECEIVE_BUFFER_LENGTH)
 		{
 			gReceiveBufferIndex = 0;
 		}
     }
-
 }
 
 void initUART()
@@ -74,33 +67,24 @@ void initUART()
 	MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
 	MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0);
 
-	//MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
-	//		GPIO_PIN2 | GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
-	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3,
-			GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION);
-	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P3,
-			GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
-	//MAP_GPIO_setAsInputPin(GPIO_PORT_P4, GPIO_PIN1);
+	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(UART_RX_PORT,
+			UART_RX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
+	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(UART_TX_PORT,
+			UART_TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
 
-	//MAP_UART_initModule(EUSCI_A0_BASE, &uartConfig);
-	//MAP_UART_enableModule(EUSCI_A0_BASE);
-	MAP_UART_initModule(EUSCI_A2_BASE, &uartConfig);
-	MAP_UART_enableModule(EUSCI_A2_BASE);
+	MAP_UART_initModule(UART_EUSCI_BASE, &uartConfig);
+	MAP_UART_enableModule(UART_EUSCI_BASE);
 
-	//MAP_UART_enableInterrupt(EUSCI_A0_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT);
-	//MAP_Interrupt_enableInterrupt(INT_EUSCIA0);
-	MAP_UART_enableInterrupt(EUSCI_A2_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT);
-	MAP_Interrupt_enableInterrupt(INT_EUSCIA2);
+	MAP_UART_enableInterrupt(UART_EUSCI_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT);
+	MAP_Interrupt_enableInterrupt(UART_EUSCI_INT);
 }
 
 void send(piece_movement* move)
 {
 	char first = move->rStart * 8 + move->cStart;
 	char second = move->rEnd * 8 + move->cEnd;
-	//MAP_UART_transmitData(EUSCI_A0_BASE, first);
-	//MAP_UART_transmitData(EUSCI_A0_BASE, second);
-	MAP_UART_transmitData(EUSCI_A2_BASE, first);
-	MAP_UART_transmitData(EUSCI_A2_BASE, second);
+	MAP_UART_transmitData(UART_EUSCI_BASE, first);
+	MAP_UART_transmitData(UART_EUSCI_BASE, second);
 }
 
 signed char receive(piece_movement* move, piece_movement* other_move)
@@ -180,8 +164,7 @@ void helloWorldSend()
 	for (i = 0; i < len; i++)
 	{
 		// transmit will block until transmit flag is reset
-		//MAP_UART_transmitData(EUSCI_A0_BASE, testMessage[i]);
-		MAP_UART_transmitData(EUSCI_A2_BASE, testMessage[i]);
+		MAP_UART_transmitData(UART_EUSCI_BASE, testMessage[i]);
 	}
 }
 

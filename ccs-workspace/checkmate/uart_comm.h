@@ -15,6 +15,14 @@
 /** Defines **/
 #define UART_RECEIVE_BUFFER_LENGTH 32
 
+#define UART_TX_PORT 	GPIO_PORT_P3
+#define UART_TX_PIN		GPIO_PIN3
+#define UART_RX_PORT	GPIO_PORT_P3
+#define UART_RX_PIN		GPIO_PIN2
+#define UART_EUSCI_BASE	EUSCI_A2_BASE
+#define UART_EUSCI_INT	INT_EUSCIA2
+
+
 /** Globals **/
 volatile unsigned char gReceiveBuffer[UART_RECEIVE_BUFFER_LENGTH];
 volatile unsigned short gReceiveBufferIndex;
@@ -22,6 +30,8 @@ volatile unsigned short gReceiveBufferIndex;
 /** Functions **/
 // do any setup to send and receive through UART
 void initUART();
+// capture data from the UART receive register into global buffer
+void uartReceiveISR();
 
 // send a piece movement to chess server
 void send(piece_movement* move);
