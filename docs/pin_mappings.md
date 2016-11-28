@@ -31,7 +31,7 @@ The following pins have functions for our application.
 
 We are using several integrated circuit boards that go on a master header board. One exception is the mux boards, which have a separate PCB that is located on the board layer with the piece sensors and will need cables to connect with the master board. Some other components can be connected directly to the master board without an intermediary IC.
 
-* [DRV8825 Stepper Motor Driver Carrier](https://www.pololu.com/product/2133) and its associated [IC datasheet](https://www.pololu.com/file/download/drv8825.pdf?file_id=0J590). The driver board has 16 pins, and we use two of them. Each board will interface with a motor through 6 signals: A1, A2, B1, B2, power (12 V), ground.
+* [DRV8825 Stepper Motor Driver Carrier](https://www.pololu.com/product/2133) and its associated [IC datasheet](https://www.pololu.com/file/download/drv8825.pdf?file_id=0J590). The driver board has 16 pins, and we use two of them. Each board will interface with a motor through 4 signals: A1, A2, B1, B2.
   * __ENABLE__: Wired to ground (or unconnected)
   * __M0__: Wired to 3.3 V
   * __M1__: Wired to 3.3 V
