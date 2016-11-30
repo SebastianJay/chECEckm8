@@ -59,6 +59,10 @@ void initMotors()
 	MAP_GPIO_setAsOutputPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 
+	// set input button pins
+	MAP_GPIO_setAsInputPin(X_HOMING_BUTTON_PORT, X_HOMING_BUTTON_PIN);
+	MAP_GPIO_setAsInputPin(Y_HOMING_BUTTON_PORT, Y_HOMING_BUTTON_PIN);
+
 	// init globals
 	gTableCursor.r = 0;
 	gTableCursor.c = 0;
@@ -81,6 +85,27 @@ void debugServoLoop()
 		disengageMagnet();
 		for (i = 0; i < 1000000; i++);
 	}
+}
+
+void debugButtonDemo()
+{
+	// set output LED
+	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
+			GPIO_PIN0, GPIO_PRIMARY_MODULE_FUNCTION);
+	MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
+	MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0);
+
+	while (1) {
+		_delay_cycles(100);
+		int val = MAP_GPIO_getInputPinValue(X_HOMING_BUTTON_PORT, X_HOMING_BUTTON_PIN);
+		if (val == GPIO_INPUT_PIN_LOW)
+		{
+			break;
+		}
+	}
+
+	// light LED when button pressed
+	MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
 }
 
 void stepX() {

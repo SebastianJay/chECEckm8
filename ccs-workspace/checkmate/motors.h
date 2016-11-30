@@ -50,6 +50,11 @@
 #define Y_SLEEP_PORT	GPIO_PORT_P5
 #define Y_SLEEP_PIN		GPIO_PIN6
 
+#define X_HOMING_BUTTON_PORT	GPIO_PORT_P6
+#define X_HOMING_BUTTON_PIN		GPIO_PIN6
+#define Y_HOMING_BUTTON_PORT	GPIO_PORT_P6
+#define Y_HOMING_BUTTON_PIN		GPIO_PIN7
+
 /** Structs **/
 typedef struct {
 	signed char r;
@@ -89,5 +94,7 @@ void moveBetweenCornerAndCenter(int toCorner);
 void debugServoLoop();
 // does some simple motor movement
 void debugMotorDemo();
+// tests whether MSP can read from button
+void debugButtonDemo();
 
 #endif /* MOTORS_H_ */
