@@ -16,9 +16,9 @@ void initSensors()
 	MAP_GPIO_setAsOutputPin(MUX_SELECT3_PORT, MUX_SELECT3_PIN);
 	MAP_GPIO_setAsOutputPin(MUX_SELECT4_PORT, MUX_SELECT4_PIN);
 	MAP_GPIO_setAsInputPin(MUX_READ1_PORT, MUX_READ1_PIN);
-	//MAP_GPIO_setAsInputPin(MUX_READ2_PORT, MUX_READ2_PIN);
-	//MAP_GPIO_setAsInputPin(MUX_READ3_PORT, MUX_READ3_PIN);
-	//MAP_GPIO_setAsInputPin(MUX_READ4_PORT, MUX_READ4_PIN);
+	MAP_GPIO_setAsInputPin(MUX_READ2_PORT, MUX_READ2_PIN);
+	MAP_GPIO_setAsInputPin(MUX_READ3_PORT, MUX_READ3_PIN);
+	MAP_GPIO_setAsInputPin(MUX_READ4_PORT, MUX_READ4_PIN);
 
 	// init globals
 	char r, c, i;
@@ -44,7 +44,12 @@ void initSensors()
 void readNextState()
 {
 	int i;
-	unsigned int test = 0;	// debugging
+	int j;
+	unsigned int test[4];	// debugging
+	for (j = 0; j < 4; j++)
+	{
+		test[j] = 0;
+	}
 	for (i = 0; i < 16; i++)
 	{
 		// set the select bits for the mux
@@ -73,18 +78,29 @@ void readNextState()
 			MAP_GPIO_setOutputLowOnPin(MUX_SELECT4_PORT, MUX_SELECT4_PIN);
 		}
 
-		int value;
+		_delay_cycles(1000);
+		char piece[4];
+		char value;
 		value = MAP_GPIO_getInputPinValue(MUX_READ1_PORT, MUX_READ1_PIN);
-		int piece = (value == GPIO_INPUT_PIN_HIGH) ? 1 : 0;
-		// TODO read from other 3 muxes
+		piece[0] = (value == GPIO_INPUT_PIN_HIGH) ? 1 : 0;
+		value = MAP_GPIO_getInputPinValue(MUX_READ2_PORT, MUX_READ2_PIN);
+		piece[1] = (value == GPIO_INPUT_PIN_HIGH) ? 1 : 0;
+		value = MAP_GPIO_getInputPinValue(MUX_READ3_PORT, MUX_READ3_PIN);
+		piece[2] = (value == GPIO_INPUT_PIN_HIGH) ? 1 : 0;
+		value = MAP_GPIO_getInputPinValue(MUX_READ4_PORT, MUX_READ4_PIN);
+		piece[3] = (value == GPIO_INPUT_PIN_HIGH) ? 1 : 0;
 
 		// TODO manual muxing here
 		gBoardState.nextState[i / 2][i % 2] = piece;
 
 		// debugging
-		test = test << 1;
-		test |= piece;
+		for (j = 0; j < 4; j++)
+		{
+			test[j] = test[j] << 1;
+			test[j] |= piece[j];
+		}
 	}
+	;
 }
 
 void updateChangeStateCounter()
