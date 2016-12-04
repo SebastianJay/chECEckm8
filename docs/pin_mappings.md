@@ -27,6 +27,10 @@ The following pins have functions for our application.
 * 6.7: Read signal from homing switch 1 (y-axis)
 * 2.4: PWM signal for servo
 
+Arthur's Backup Switches:
+* 3.5: Read signal from homing switch 0 (x-axis)
+* 3.7: Read signal from homing switch 1 (y-axis)
+
 ## Interface boards and connectors
 
 We are using several integrated circuit boards that go on a master header board. One exception is the mux boards, which have a separate PCB that is located on the board layer with the piece sensors and will need cables to connect with the master board. Some other components can be connected directly to the master board without an intermediary IC.
