@@ -62,10 +62,12 @@ def computer_move(node, board, engine, difficulty):
     board.push(move)
 
     print "Stockfish move: " + str(move)
+    write_move_to_serial(board, move)
+    node = node.add_variation(move)
+    return node
 
-    # Write move to serial
+def write_move_to_serial(board, move):
     ser = Comm.getSerial()
-
     # Write auxilary moves, e.g. for capture or special move
     if board.is_capture(move):
         capture_tile = ''
@@ -79,8 +81,7 @@ def computer_move(node, board, engine, difficulty):
                 raise Exception('unknown en passant command ' + str(move))
         else:
             capture_tile = str(move)[2:4]
-        code = encode_uci(capture_tile)
-        code = code & 0x8000    # setting MSB tells client to process another move command
+        code = encode_uci(capture_tile, True)
         ser.write(code)
     elif board.is_castling(move):
         king_dest = str(move)[2:4]
@@ -95,23 +96,25 @@ def computer_move(node, board, engine, difficulty):
             rook_uci = 'h8f8'
         else:
             raise Exception('unknown castling command ' + str(move))
-        code = encode_uci(rook_uci)
-        code = code & 0x8000
+        code = encode_uci(rook_uci, True)
         ser.write(code)
 
     # write the main move
     code = encode_uci(str(move))
     ser.write(code)
 
-    node = node.add_variation(move)
-    return node
-
-def debug_shell_move(node, board):
-    uci = raw_input("Enter move: ").strip()
-    move = chess.Move.from_uci(uci)
-    if move in board.legal_moves:
-        board.push(move)
-        node = node.add_variation(move)
+def debug_shell_move(node, board, write_to_com=False):
+    while True:
+        uci = raw_input("Enter move: ").strip()
+        move = chess.Move.from_uci(uci)
+        if move in board.legal_moves:
+            if write_to_com:
+                write_move_to_serial(board, move)
+            board.push(move)
+            node = node.add_variation(move)
+            break
+        else:
+            print 'Move not valid!'
     return node
 
 def main():
@@ -146,10 +149,10 @@ def main():
         while True:
             if board.is_game_over(): break
 
-            #node = player_move(node, board)
+            node = player_move(node, board)
+            print board
             #node = computer_move(node, board, engine, 3)
-            node = debug_shell_move(node, board)
-
+            node = debug_shell_move(node, board, True)
             print board
 
             '''

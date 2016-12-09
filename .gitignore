@@ -102,3 +102,7 @@ Release/
 chess-engine/stockfish*
 # Driverlib add-in for CCS
 ccs-workspace/driverlib/
+
+# ultiboard
+*.ewnet
+*(Security Copy)

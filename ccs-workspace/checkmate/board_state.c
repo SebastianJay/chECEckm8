@@ -78,20 +78,23 @@ void readNextState()
 			MAP_GPIO_setOutputLowOnPin(MUX_SELECT4_PORT, MUX_SELECT4_PIN);
 		}
 
-		_delay_cycles(1000);
+		_delay_cycles(1000);	// TODO remove if not needed
 		char piece[4];
 		char value;
 		value = MAP_GPIO_getInputPinValue(MUX_READ1_PORT, MUX_READ1_PIN);
-		piece[0] = (value == GPIO_INPUT_PIN_HIGH) ? 1 : 0;
+		piece[0] = (value == GPIO_INPUT_PIN_LOW) ? 1 : 0;
 		value = MAP_GPIO_getInputPinValue(MUX_READ2_PORT, MUX_READ2_PIN);
-		piece[1] = (value == GPIO_INPUT_PIN_HIGH) ? 1 : 0;
+		piece[1] = (value == GPIO_INPUT_PIN_LOW) ? 1 : 0;
 		value = MAP_GPIO_getInputPinValue(MUX_READ3_PORT, MUX_READ3_PIN);
-		piece[2] = (value == GPIO_INPUT_PIN_HIGH) ? 1 : 0;
+		piece[2] = (value == GPIO_INPUT_PIN_LOW) ? 1 : 0;
 		value = MAP_GPIO_getInputPinValue(MUX_READ4_PORT, MUX_READ4_PIN);
-		piece[3] = (value == GPIO_INPUT_PIN_HIGH) ? 1 : 0;
+		piece[3] = (value == GPIO_INPUT_PIN_LOW) ? 1 : 0;
 
 		// TODO manual muxing here
-		gBoardState.nextState[i / 2][i % 2] = piece;
+		for (j = 0; j < 4; j++)
+		{
+			gBoardState.nextState[i % 8][1 - (i / 8) + (j * 2)] = piece[j];
+		}
 
 		// debugging
 		for (j = 0; j < 4; j++)
@@ -100,7 +103,6 @@ void readNextState()
 			test[j] |= piece[j];
 		}
 	}
-	;
 }
 
 void updateChangeStateCounter()
@@ -110,6 +112,9 @@ void updateChangeStateCounter()
 	{
 		for (c = 0; c < BOARD_COLS; c++)
 		{
+			//if (c != 0) {
+			//	continue;	//DEBUG
+			//}
 			char change = gBoardState.nextState[r][c] != gBoardState.currentState[r][c] ? 1 : 0;
 			char previousValue = gBoardState.changeStateBuffer[r][c][gBoardState.changeStateBufferIndex];
 			if (change == 1 && previousValue == 0)
@@ -237,7 +242,7 @@ signed char constructPieceMovement(piece_movement* move)
 					// piece moved to where second moved off, start is ok
 					break;
 				}
-				else
+				else if (rStart2 != -1 && cStart2 != -1)	// only continue logic for two pieces coming off board
 				{
 					// piece moved to where neither moved off
 					// check for en passant

@@ -10,6 +10,7 @@
 #ifndef UART_COMM_H_
 #define UART_COMM_H_
 
+#include "driverlib.h"
 #include "board_state.h"
 
 /** Defines **/
@@ -19,6 +20,8 @@
 #define UART_TX_PIN		GPIO_PIN3
 #define UART_RX_PORT	GPIO_PORT_P3
 #define UART_RX_PIN		GPIO_PIN2
+#define UART_SHDN_PORT	GPIO_PORT_P6
+#define UART_SHDN_PIN	GPIO_PIN0
 #define UART_EUSCI_BASE	EUSCI_A2_BASE
 #define UART_EUSCI_INT	INT_EUSCIA2
 

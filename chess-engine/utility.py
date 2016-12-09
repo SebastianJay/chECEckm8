@@ -36,14 +36,16 @@ def int_to_uci(code):
     return chess.SQUARE_NAMES[source] + chess.SQUARE_NAMES[dest]
 
 # Converts the UCI string into 2 byte string
-def encode_uci(move):
+def encode_uci(move, next_move_pending=False):
     if len(move) == 2:  # just one location -> indicates a capture
-        tmp = uci_to_int(location + 'a1')
+        tmp = uci_to_int(move + 'a1')
         i = tmp | 0x00FF  # all 1s in dest represents capture
     elif len(move) == 4:
         i = uci_to_int(move)
     else:
         raise Exception('unexpected arg in encode_uri')
+    if next_move_pending:
+        i = i | 0x8000  # setting MSB tells client to process another move
     s = chr((i >> 8) & 0x00FF) + chr(i & 0x00FF)
     return s
 

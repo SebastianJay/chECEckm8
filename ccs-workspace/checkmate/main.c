@@ -18,25 +18,39 @@ void main()
 	//initMotors();
 	//debugServoLoop();
 	//debugMotorDemo();
+	//debugButtonDemo();
 
 	/** UART debugging **/
 	//initUART();
 	//helloWorldSend();
 	//helloWorldReceive();
-	//debugGameLoop();
 
 	/** Piece sensing debugging **/
-	//initSensors();
-//	while (1)
-//	{
-//		;
-//		readNextState();
-//		chess_board local = gBoardState;
-//		;
-//		_delay_cycles(5000);
-//	}
+	initSensors();
 
+	// initialize all interrupts before running main game loop
 	//MAP_Interrupt_enableMaster();
+	//debugGameLoop();
+	while (1)
+	{
+		signed char status;
+		piece_movement move;
+		readNextState();
+		updateChangeStateCounter();
+		updateCurrentState(TRUE);
+		status = constructPieceMovement(&move);
+		if (status == TRUE && move.cStart == 0)
+		{
+			;
+			char x = 0;
+		}
+		else if (status == ERROR)
+		{
+			gBoardState.moveListIndex = 0;	// reset
+		}
+		_delay_cycles(5000);
+	}
+
     while(1)
     {
         MAP_PCM_gotoLPM0();

@@ -67,10 +67,27 @@ void initUART()
 	MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
 	MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0);
 
-	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(UART_RX_PORT,
-			UART_RX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
-	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(UART_TX_PORT,
-			UART_TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
+	// for debugging, initialize good pins on MSP
+	const uint8_t port_mapping[] =
+	{
+		PM_NONE, PM_NONE, PM_NONE, PM_UCA2TXD, PM_NONE, PM_NONE, PM_UCA2RXD, PM_NONE
+	};
+	MAP_PMAP_configurePorts((const uint8_t*)port_mapping, PMAP_P3MAP, 1, PMAP_DISABLE_RECONFIGURATION);
+
+	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3,
+			GPIO_PIN6, GPIO_PRIMARY_MODULE_FUNCTION);
+	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P3,
+			GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
+
+	// set transmit and receive pins for uart
+//	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(UART_RX_PORT,
+//			UART_RX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
+//	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(UART_TX_PORT,
+//			UART_TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
+
+	// set chip enable pin
+	MAP_GPIO_setAsInputPin(UART_SHDN_PORT, UART_SHDN_PIN);
+	MAP_GPIO_setOutputHighOnPin(UART_SHDN_PORT, UART_SHDN_PIN);
 
 	MAP_UART_initModule(UART_EUSCI_BASE, &uartConfig);
 	MAP_UART_enableModule(UART_EUSCI_BASE);
@@ -104,6 +121,7 @@ signed char receive(piece_movement* move, piece_movement* other_move)
 	if (first == 0xFF && second == 0xFF)
 	{
 		// response was error - previous human move was invalid
+		gReceiveBufferIndex = 0;
 		return ERROR;
 	}
 	else if ((first & 0x80) != 0)
@@ -135,8 +153,16 @@ signed char receive(piece_movement* move, piece_movement* other_move)
 
 	move->rStart = first / 8;
 	move->cStart = first % 8;
-	move->rEnd = second / 8;
-	move->cEnd = second % 8;
+	if (second != 0xFF)
+	{
+		move->rEnd = second / 8;
+		move->cEnd = second % 8;
+	}
+	else
+	{
+		move->rEnd = 0xFF;
+		move->cEnd = 0xFF;
+	}
 
 	// reset index, discard any remaining message
 	gReceiveBufferIndex = 0;
@@ -147,12 +173,13 @@ void debugGameLoop()
 {
 	piece_movement move;
 	piece_movement other;
+	signed char status;
 	while (1)
 	{
 		// place a breakpoint before sending and modify move through debugger
 		;
 		send(&move);
-		receive(&move, &other);
+		status = receive(&move, &other);
 	}
 }
 
