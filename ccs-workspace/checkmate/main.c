@@ -15,8 +15,8 @@ void main()
 	MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
 
 	/** Servo, motors debugging **/
-	initMotors();
-	debugMotorDemo();
+	//initMotors();
+	//debugMotorDemo();
 
 	/** UART debugging **/
 	//initUART();
@@ -52,11 +52,12 @@ void main()
 //		_delay_cycles(5000);
 //	}
 
-	/** Begin game loop **/
+	/** Begin game loop */
 	// initialize everything
 	initMotors();
 	initSensors();
 	initUART();
+
 	MAP_Interrupt_enableMaster();
 
 	// run main loop
@@ -87,9 +88,21 @@ void main()
 				{
 					// execute server response to move pieces - can be one or two moves
 					move(response1, TRUE);
+					// update the current board state to include movement
+					gBoardState.currentState[response1.rStart][response1.cStart] = 0;
+					if (response1.rEnd != 0xFF && response1.cEnd != 0xFF)
+					{
+						gBoardState.currentState[response1.rEnd][response1.cEnd] = 1;
+					}
 					if (response2.rStart != 0xFF && response2.rEnd != 0xFF)
 					{
 						move(response2, TRUE);
+						// update the current board state to include movement
+						gBoardState.currentState[response2.rStart][response2.cStart] = 0;
+						if (response2.rEnd != 0xFF && response2.cEnd != 0xFF)
+						{
+							gBoardState.currentState[response2.rEnd][response2.cEnd] = 1;
+						}
 					}
 
 					if (ret == GAMEOVER_WITH_MOVE)

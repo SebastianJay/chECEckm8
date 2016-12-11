@@ -80,7 +80,7 @@ void initUART()
 //			UART_TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
 
 	// set chip enable pin
-	MAP_GPIO_setAsInputPin(UART_SHDN_PORT, UART_SHDN_PIN);
+	MAP_GPIO_setAsOutputPin(UART_SHDN_PORT, UART_SHDN_PIN);
 	MAP_GPIO_setOutputHighOnPin(UART_SHDN_PORT, UART_SHDN_PIN);
 
 	// init USCI module
@@ -209,6 +209,8 @@ void helloWorldSend()
 
 void helloWorldReceive()
 {
+	MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0);
+
 	// light red LED
 	MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
 

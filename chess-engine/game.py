@@ -72,7 +72,7 @@ def write_move_to_serial(board, move):
     board.push(move)
     game_over = board.is_game_over()
     board.pop()
-    
+
     # Write auxilary moves, e.g. for capture or special move
     if board.is_capture(move):
         capture_tile = ''
@@ -109,8 +109,8 @@ def write_move_to_serial(board, move):
         ser.write(code)
 
     # write the main move
-    code = encode_uci(str(move))
-    ser.write(code, False, game_over)
+    code = encode_uci(str(move), False, game_over)
+    ser.write(code)
 
 def debug_shell_move(node, board, write_to_com=False):
     while True:

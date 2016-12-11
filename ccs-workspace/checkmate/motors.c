@@ -384,15 +384,6 @@ void move(piece_movement movement, int engage) {
 		gTableCursor.r = movement.rEnd;
 		gTableCursor.c = movement.cEnd;
 	}
-
-	if (engage) {
-		// update the current board state to include movement
-		gBoardState.currentState[movement.rStart][movement.cStart] = 0;
-		if (movement.rEnd != -1 && movement.cEnd != -1)
-		{
-			gBoardState.currentState[movement.rEnd][movement.cEnd] = 1;
-		}
-	}
 }
 
 void engageMagnet()
