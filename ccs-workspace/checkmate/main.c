@@ -15,10 +15,8 @@ void main()
 	MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
 
 	/** Servo, motors debugging **/
-	//initMotors();
-	//debugServoLoop();
-	//debugMotorDemo();
-	//debugButtonDemo();
+	initMotors();
+	debugMotorDemo();
 
 	/** UART debugging **/
 	//initUART();
@@ -33,6 +31,7 @@ void main()
 	// initialize all interrupts before running main game loop
 	//MAP_Interrupt_enableMaster();
 	//debugGameLoop();
+
 //	while (1)
 //	{
 //		signed char status;

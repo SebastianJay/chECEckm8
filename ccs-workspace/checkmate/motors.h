@@ -17,8 +17,8 @@
 #define SERVO_DELAY_BETWEEN_PULSE 	24000	// low ticks between pulses, 20 ms
 // according to datasheet the full range is spanned by 0.75 ms (900 ticks) and 2.25 ms (2700 ticks) pulses
 // in practice it seems we need to stretch these out a bit further
-#define SERVO_PULSE_WIDTH_1			1175		// high ticks for engage, 1.5 ms
-#define SERVO_PULSE_WIDTH_2			2225	// high ticks for disengage, 2.25 ms
+#define SERVO_PULSE_WIDTH_1			1175 // high ticks for engage, 1.5 ms
+#define SERVO_PULSE_WIDTH_2			2225	 // high ticks for disengage, 2.25 ms
 
 // delays associated with motor components
 #define ONE_SECOND_TICKS	12000000
@@ -36,6 +36,9 @@
 #define STEPS_PER_SPACE	10060
 #define STEPS_PER_HALF_SPACE	10060 / 2	// used to travel between center and corner
 
+#define STEPS_COLUMN_A 1000
+#define STEPS_ROW_ONE 1000
+
 // ports and pins for motor control
 #define X_STEP_PORT		GPIO_PORT_P2
 #define X_STEP_PIN		GPIO_PIN5
@@ -43,6 +46,7 @@
 #define X_DIR_PIN		GPIO_PIN0
 #define X_SLEEP_PORT	GPIO_PORT_P5
 #define X_SLEEP_PIN		GPIO_PIN7
+
 #define Y_STEP_PORT		GPIO_PORT_P2
 #define Y_STEP_PIN		GPIO_PIN7
 #define Y_DIR_PORT		GPIO_PORT_P2	// TODO debug - change with good MSP
@@ -52,6 +56,7 @@
 
 #define X_HOMING_BUTTON_PORT	GPIO_PORT_P6
 #define X_HOMING_BUTTON_PIN		GPIO_PIN6
+
 #define Y_HOMING_BUTTON_PORT	GPIO_PORT_P6
 #define Y_HOMING_BUTTON_PIN		GPIO_PIN7
 
