@@ -15,10 +15,8 @@ void main()
 	MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
 
 	/** Servo, motors debugging **/
-	//initMotors();
-	//debugServoLoop();
-	//debugMotorDemo();
-	//debugButtonDemo();
+	initMotors();
+	debugMotorDemo();
 
 	/** UART debugging **/
 	//initUART();
@@ -26,30 +24,31 @@ void main()
 	//helloWorldReceive();
 
 	/** Piece sensing debugging **/
-	initSensors();
+//	initSensors();
 
 	// initialize all interrupts before running main game loop
 	//MAP_Interrupt_enableMaster();
 	//debugGameLoop();
-	while (1)
-	{
-		signed char status;
-		piece_movement move;
-		readNextState();
-		updateChangeStateCounter();
-		updateCurrentState(TRUE);
-		status = constructPieceMovement(&move);
-		if (status == TRUE && move.cStart == 0)
-		{
-			;
-			char x = 0;
-		}
-		else if (status == ERROR)
-		{
-			gBoardState.moveListIndex = 0;	// reset
-		}
-		_delay_cycles(5000);
-	}
+
+//	while (1)
+//	{
+//		signed char status;
+//		piece_movement move;
+//		readNextState();
+//		updateChangeStateCounter();
+//		updateCurrentState(TRUE);
+//		status = constructPieceMovement(&move);
+//		if (status == TRUE && move.cStart == 0)
+//		{
+//			;
+//			char x = 0;
+//		}
+//		else if (status == ERROR)
+//		{
+//			gBoardState.moveListIndex = 0;	// reset
+//		}
+//		_delay_cycles(5000);
+//	}
 
     while(1)
     {
