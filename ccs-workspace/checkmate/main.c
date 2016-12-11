@@ -16,6 +16,7 @@ void main()
 
 	/** Servo, motors debugging **/
 	initMotors();
+	moveToButtons();
 	debugMotorDemo();
 
 	/** UART debugging **/
@@ -52,7 +53,7 @@ void main()
 //		_delay_cycles(5000);
 //	}
 
-	/** Begin game loop **/
+	/** Begin game loop
 	// initialize everything
 	initMotors();
 	initSensors();
@@ -133,6 +134,7 @@ void main()
 			}
 		}
 	}
+	**/
 
     while(1)
     {
