@@ -41,7 +41,7 @@ void initMotors()
 
 	// X axis DIR: LOW -> RIGHT, HIGH -> LEFT
 	MAP_GPIO_setAsOutputPin(X_DIR_PORT, X_DIR_PIN);
-	MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);
+	MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);
 
 	// X axis SLEEP
 	MAP_GPIO_setAsOutputPin(X_SLEEP_PORT, X_SLEEP_PIN);
@@ -51,7 +51,7 @@ void initMotors()
 	MAP_GPIO_setAsOutputPin(Y_STEP_PORT, Y_STEP_PIN);
 	MAP_GPIO_setOutputLowOnPin(Y_STEP_PORT, Y_STEP_PIN);
 
-	// Y axis DIR: LOW -> DOWN, HIGH -> UP
+	// Y axis DIR: LOW -> UP, HIGH -> DOWN
 	MAP_GPIO_setAsOutputPin(Y_DIR_PORT, Y_DIR_PIN);
 	MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);
 
@@ -60,8 +60,8 @@ void initMotors()
 	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 
 	// set input button pins
-	//MAP_GPIO_setAsInputPin(X_HOMING_BUTTON_PORT, X_HOMING_BUTTON_PIN);
-	//MAP_GPIO_setAsInputPin(Y_HOMING_BUTTON_PORT, Y_HOMING_BUTTON_PIN);
+	MAP_GPIO_setAsInputPin(X_HOMING_BUTTON_PORT, X_HOMING_BUTTON_PIN);
+	MAP_GPIO_setAsInputPin(Y_HOMING_BUTTON_PORT, Y_HOMING_BUTTON_PIN);
 
 	// init globals
 	gTableCursor.r = 0;
@@ -160,11 +160,10 @@ void moveY(int num_spaces) {
 	_delay_cycles(MOTOR_AWAKE_DELAY);
 	if (num_spaces < 0) {
 		num_spaces = -num_spaces;
-		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
+		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
 	} else {
-		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
+		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
 	}
-//	MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
 
 	int i;
 	int j;
@@ -183,10 +182,10 @@ void moveBetweenCornerAndCenter(int toCorner) {
 	_delay_cycles(MOTOR_AWAKE_DELAY);
 	if (toCorner) {
 		MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
-		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
+		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
 	} else {
 		MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
-		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
+		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
 	}
 	int j;
 	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
@@ -199,16 +198,14 @@ void moveBetweenCornerAndCenter(int toCorner) {
 	_delay_cycles(MOTOR_MOVE_DELAY);
 }
 
-void moveToButtons() {
-
+void moveToButtons()
+{
 	MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
-	MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
-
-	// Delay and wake
-	_delay_cycles(MOTOR_AWAKE_DELAY);
-	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+	MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
 
 	// Home on X
+	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+	_delay_cycles(MOTOR_AWAKE_DELAY);
 	while (1) {
 		int val = MAP_GPIO_getInputPinValue(X_HOMING_BUTTON_PORT, X_HOMING_BUTTON_PIN);
 		if (val == GPIO_INPUT_PIN_LOW)
@@ -217,10 +214,12 @@ void moveToButtons() {
 		}
 		stepX();
 	}
-
+	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
 	_delay_cycles(MOTOR_MOVE_DELAY);
 
 	// Home on Y
+	MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+	_delay_cycles(MOTOR_AWAKE_DELAY);
 	while (1) {
 		int val = MAP_GPIO_getInputPinValue(Y_HOMING_BUTTON_PORT, Y_HOMING_BUTTON_PIN);
 		if (val == GPIO_INPUT_PIN_LOW)
@@ -229,23 +228,29 @@ void moveToButtons() {
 		}
 		stepY();
 	}
+	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+	_delay_cycles(MOTOR_MOVE_DELAY);
 
 	MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
-	MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
+	MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
 
 	// Move to column A (x-axis)
+	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+	_delay_cycles(MOTOR_AWAKE_DELAY);
 	int i;
-	for (i = 0; i < STEPS_COLUMN_A; i++)
+	for (i = 0; i < STEPS_COLUMN_A; i++) {
 		stepX();
 	}
+	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+	_delay_cycles(MOTOR_MOVE_DELAY);
 
 	// Move to row 1 (y-axis)
-	for (i = 0; i < STEPS_ROW_ONE; i++)
+	MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+	_delay_cycles(MOTOR_AWAKE_DELAY);
+	for (i = 0; i < STEPS_ROW_ONE; i++) {
 		stepY();
 	}
-
-	// Sleep and delay
-	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 	_delay_cycles(MOTOR_MOVE_DELAY);
 }
 

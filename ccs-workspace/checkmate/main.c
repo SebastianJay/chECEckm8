@@ -72,13 +72,13 @@ void main()
 			updateCurrentState(TRUE);
 
 			// parse piece changes into movement
-			piece_movement move;
+			piece_movement human_move;
 			signed char ret;
-			ret = constructPieceMovement(&move);
+			ret = constructPieceMovement(&human_move);
 			if (ret == TRUE)
 			{
 				// send movement to server
-				send(&move);
+				send(&human_move);
 
 				// receive responses
 				piece_movement response1, response2;
