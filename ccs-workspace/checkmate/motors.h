@@ -30,7 +30,7 @@
 #define X_STEP_TICKS 	938		// ticks to wait in high or low for x stepping
 #define Y_STEP_TICKS 	938		// ticks to wait in high or low for y stepping
 
-// STEPS_PER_SPACE = steps needed to travel one chess board space (3.7 in)
+// STEPS_PER_SPACE = steps needed to travel one chess board space (3.75 in)
 // to calculate this, choose an arbitrary step count and measure its corresponding distance
 //  then use a ratio with your desired distance to find the required step count
 #define STEPS_PER_SPACE	10196

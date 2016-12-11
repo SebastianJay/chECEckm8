@@ -140,10 +140,10 @@ signed char receive(piece_movement* move, piece_movement* other_move)
 	else
 	{
 		// invalidate other_move so caller knows not to use it
-		other_move->rStart = 0xFF;
-		other_move->cStart = 0xFF;
-		other_move->rEnd = 0xFF;
-		other_move->cEnd = 0xFF;
+		other_move->rStart = -1;
+		other_move->cStart = -1;
+		other_move->rEnd = -1;
+		other_move->cEnd = -1;
 	}
 
 	int game_over = FALSE;
@@ -172,8 +172,8 @@ signed char receive(piece_movement* move, piece_movement* other_move)
 	}
 	else
 	{
-		move->rEnd = 0xFF;
-		move->cEnd = 0xFF;
+		move->rEnd = -1;
+		move->cEnd = -1;
 	}
 
 	// reset index, discard any remaining message

@@ -229,8 +229,9 @@ void moveToCaptureCell(int diagonal)
 
 	int j;
 	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
-		// interleave steps to both motors
 		stepX();
+	}
+	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
 		if (diagonal)
 		{
 			stepY();
@@ -248,13 +249,15 @@ void moveToCaptureCell(int diagonal)
 	}
 
 	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
-		// interleave steps to both motors
 		stepX();
-		if (diagonal)
-		{
+	}
+	if (diagonal)
+	{
+		for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
 			stepY();
 		}
 	}
+
 
 	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
 	if (diagonal)
@@ -376,7 +379,8 @@ void move(piece_movement movement, int engage) {
 
 		// set cursor to dest
 		gTableCursor.r = captureRow;
-		gTableCursor.c = 0;
+		gTableCursor.c = 7;
+		gCaptureIndex++;
 	}
 	else
 	{

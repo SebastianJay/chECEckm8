@@ -58,7 +58,7 @@ void main()
 	initMotors();
 	initSensors();
 	initUART();
-
+	moveToButtons();
 	MAP_Interrupt_enableMaster();
 
 	// run main loop
@@ -91,16 +91,16 @@ void main()
 					move(response1, TRUE);
 					// update the current board state to include movement
 					gBoardState.currentState[response1.rStart][response1.cStart] = 0;
-					if (response1.rEnd != 0xFF && response1.cEnd != 0xFF)
+					if (response1.rEnd != -1 && response1.cEnd != -1)
 					{
 						gBoardState.currentState[response1.rEnd][response1.cEnd] = 1;
 					}
-					if (response2.rStart != 0xFF && response2.rEnd != 0xFF)
+					if (response2.rStart != -1 && response2.cStart != -1)
 					{
 						move(response2, TRUE);
 						// update the current board state to include movement
 						gBoardState.currentState[response2.rStart][response2.cStart] = 0;
-						if (response2.rEnd != 0xFF && response2.cEnd != 0xFF)
+						if (response2.rEnd != -1 && response2.cEnd != -1)
 						{
 							gBoardState.currentState[response2.rEnd][response2.cEnd] = 1;
 						}
