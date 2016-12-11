@@ -16,6 +16,7 @@ void main()
 
 	/** Servo, motors debugging **/
 	//initMotors();
+	//moveToButtons();
 	//debugMotorDemo();
 
 	/** UART debugging **/

@@ -17,8 +17,8 @@
 #define SERVO_DELAY_BETWEEN_PULSE 	24000	// low ticks between pulses, 20 ms
 // according to datasheet the full range is spanned by 0.75 ms (900 ticks) and 2.25 ms (2700 ticks) pulses
 // in practice it seems we need to stretch these out a bit further
-#define SERVO_PULSE_WIDTH_1			1175 // high ticks for engage, 1.5 ms
-#define SERVO_PULSE_WIDTH_2			2225	 // high ticks for disengage, 2.25 ms
+#define SERVO_PULSE_WIDTH_1			2225	 // high ticks for engage, 1.5 ms
+#define SERVO_PULSE_WIDTH_2			1175 // high ticks for disengage, 2.25 ms
 
 // delays associated with motor components
 #define ONE_SECOND_TICKS	12000000
@@ -33,11 +33,14 @@
 // STEPS_PER_SPACE = steps needed to travel one chess board space (3.7 in)
 // to calculate this, choose an arbitrary step count and measure its corresponding distance
 //  then use a ratio with your desired distance to find the required step count
-#define STEPS_PER_SPACE	10060
-#define STEPS_PER_HALF_SPACE	10060 / 2	// used to travel between center and corner
+#define STEPS_PER_SPACE	10196
+#define STEPS_PER_HALF_SPACE	10196 / 2	// used to travel between center and corner
 
-#define STEPS_COLUMN_A 1000
-#define STEPS_ROW_ONE 1000
+#define STEPS_COLUMN_A 5098
+#define STEPS_ROW_ONE 3739
+
+//#define STEPS_COLUMN_A 4898
+//#define STEPS_ROW_ONE 3539
 
 // ports and pins for motor control
 #define X_STEP_PORT		GPIO_PORT_P2
@@ -78,6 +81,8 @@ void initMotors();
 void engageMagnet();
 // use the servo to move the magnet out of position
 void disengageMagnet();
+
+void moveToButtons();
 
 // move table cursor to (0, 0), the bottom left corner
 void moveToHome();

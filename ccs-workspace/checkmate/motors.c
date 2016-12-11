@@ -60,6 +60,8 @@ void initMotors()
 	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 
 	// set input button pins
+	MAP_GPIO_setOutputHighOnPin(X_HOMING_BUTTON_PORT, X_HOMING_BUTTON_PIN);
+	MAP_GPIO_setOutputHighOnPin(Y_HOMING_BUTTON_PORT, Y_HOMING_BUTTON_PIN);
 	MAP_GPIO_setAsInputPin(X_HOMING_BUTTON_PORT, X_HOMING_BUTTON_PIN);
 	MAP_GPIO_setAsInputPin(Y_HOMING_BUTTON_PORT, Y_HOMING_BUTTON_PIN);
 
@@ -70,14 +72,17 @@ void initMotors()
 }
 
 void debugMotorDemo() {
-//	disengageMagnet();
+	moveRC(0, 0, FALSE);
+	moveRC(2, 2, TRUE);
 
-//	moveToHome();
-	while (1) {
-		moveRC(2, 2, FALSE);
-		moveRC(0, 0, FALSE);
-	}
-//	moveToHome();
+	moveRC(1, 4, FALSE);
+	moveRC(3, 4, TRUE);
+
+	moveRC(1, 3, FALSE);
+	moveRC(2, 3, TRUE);
+
+	moveRC(1, 6, FALSE);
+	moveRC(2, 5, TRUE);
 }
 
 void debugServoLoop()
@@ -96,20 +101,21 @@ void debugButtonDemo()
 	// set output LED
 	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
 			GPIO_PIN0, GPIO_PRIMARY_MODULE_FUNCTION);
-	MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
 	MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0);
+	MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
 
 	while (1) {
 		_delay_cycles(100);
-		int val = MAP_GPIO_getInputPinValue(X_HOMING_BUTTON_PORT, X_HOMING_BUTTON_PIN);
+		int val = MAP_GPIO_getInputPinValue(Y_HOMING_BUTTON_PORT, Y_HOMING_BUTTON_PIN);
 		if (val == GPIO_INPUT_PIN_LOW)
 		{
+			volatile int x;
 			break;
 		}
 	}
 
 	// light LED when button pressed
-	MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
+	MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
 }
 
 void stepX() {
@@ -182,6 +188,7 @@ void moveBetweenCornerAndCenter(int toCorner)
 	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
 	MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 	_delay_cycles(MOTOR_AWAKE_DELAY);
+
 	if (toCorner) {
 		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
 		MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
@@ -189,12 +196,16 @@ void moveBetweenCornerAndCenter(int toCorner)
 		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
 		MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
 	}
+
 	int j;
 	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
-		// interleave steps to both motors
 		stepX();
+	}
+
+	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
 		stepY();
 	}
+
 	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
 	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 	_delay_cycles(MOTOR_MOVE_DELAY);
@@ -262,6 +273,7 @@ void moveToButtons()
 	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
 	_delay_cycles(MOTOR_AWAKE_DELAY);
 	while (1) {
+		__delay_cycles(100);
 		int val = MAP_GPIO_getInputPinValue(X_HOMING_BUTTON_PORT, X_HOMING_BUTTON_PIN);
 		if (val == GPIO_INPUT_PIN_LOW)
 		{
@@ -276,12 +288,14 @@ void moveToButtons()
 	MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 	_delay_cycles(MOTOR_AWAKE_DELAY);
 	while (1) {
+		__delay_cycles(100);
 		int val = MAP_GPIO_getInputPinValue(Y_HOMING_BUTTON_PORT, Y_HOMING_BUTTON_PIN);
 		if (val == GPIO_INPUT_PIN_LOW)
 		{
 			break;
 		}
 		stepY();
+
 	}
 	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 	_delay_cycles(MOTOR_MOVE_DELAY);
@@ -306,6 +320,7 @@ void moveToButtons()
 		stepY();
 	}
 	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+
 	_delay_cycles(MOTOR_MOVE_DELAY);
 }
 
