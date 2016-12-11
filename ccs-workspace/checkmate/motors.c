@@ -183,11 +183,11 @@ void moveBetweenCornerAndCenter(int toCorner)
 	MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 	_delay_cycles(MOTOR_AWAKE_DELAY);
 	if (toCorner) {
-		MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
 		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
-	} else {
 		MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
+	} else {
 		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
+		MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
 	}
 	int j;
 	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
@@ -210,7 +210,7 @@ void moveToCaptureCell(int diagonal)
 	_delay_cycles(MOTOR_AWAKE_DELAY);
 
 	// Move to the capture location
-	MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
+	MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
 	if (diagonal)
 	{
 		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
@@ -230,10 +230,10 @@ void moveToCaptureCell(int diagonal)
 	disengageMagnet();
 
 	// Move to the original location
-	MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
+	MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
 	if (diagonal)
 	{
-		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
+		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
 	}
 
 	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
@@ -246,7 +246,10 @@ void moveToCaptureCell(int diagonal)
 	}
 
 	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
-	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+	if (diagonal)
+	{
+		MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+	}
 	_delay_cycles(MOTOR_MOVE_DELAY);
 }
 
@@ -340,10 +343,9 @@ void move(piece_movement movement, int engage) {
 
 	if (movement.rEnd == -1 && movement.cEnd == -1)
 	{
-		// TODO move piece to capture space
 		int captureRow = gCaptureIndex / 2;
 		int captureOffset = gCaptureIndex % 2;
-		x_move = 0 - movement.cStart;
+		x_move = 7 - movement.cStart;
 		y_move = captureRow - movement.rStart;
 
 		// move to edge
