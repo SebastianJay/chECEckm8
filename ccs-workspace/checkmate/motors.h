@@ -63,6 +63,8 @@
 #define Y_HOMING_BUTTON_PORT	GPIO_PORT_P6
 #define Y_HOMING_BUTTON_PIN		GPIO_PIN7
 
+#define ABSVAL(x)	x >= 0 ? x : -x
+
 /** Structs **/
 typedef struct {
 	signed char r;
@@ -89,16 +91,18 @@ void moveToHome();
 // move table cursor to (row, column), with option of using servo
 void moveRC(int row, int column, int engage);
 
+// execute 1 or 2 moves sent from the chess server using the motors, choosing to use corners intelligently
+void process_moves(piece_movement move1, piece_movement move2);
 // move from one location to another, with option of using servo to magnetically drag piece
-void move(piece_movement movement, int engage);
+//  useCorner determines whether to move between tiles
+void move(piece_movement movement, int engage, int useCorner);
 // helpers to accomplish move()
 void moveX(int num_spaces);		// moves along the x axis (between columns)
 void moveY(int num_spaces);		// moves along the y axis (between rows)
+void moveXY(int x_num_spaces, int y_num_spaces); 	// moves diagonally (between col and row at once)
+void moveHalfTile(int xdir, int ydir);		// moves a half tile in directions specified by signs of parameters
 void stepX();		// sends STEP to x axis motor
 void stepY();		// sends STEP to y axis motor
-
-// move between the center and corner of a board space
-void moveBetweenCornerAndCenter(int toCorner);
 
 // DEBUG functions
 // transitions between engaged and disengaged states forever

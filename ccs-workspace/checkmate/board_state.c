@@ -186,6 +186,15 @@ signed char isCurrentStateValid()
 	return TRUE;
 }
 
+void updateCurrentStateWithMove(piece_movement move)
+{
+	gBoardState.currentState[move.rStart][move.cStart] = 0;
+	if (move.rEnd != -1 && move.cEnd != -1)
+	{
+		gBoardState.currentState[move.rEnd][move.cEnd] = 1;
+	}
+}
+
 void copyCurrentStateIntoValid()
 {
 	char r, c;

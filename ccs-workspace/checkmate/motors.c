@@ -183,88 +183,80 @@ void moveY(int num_spaces) {
 	_delay_cycles(MOTOR_MOVE_DELAY);
 }
 
-void moveBetweenCornerAndCenter(int toCorner)
-{
+void moveXY(int x_num_spaces, int y_num_spaces) {
+	if (x_num_spaces <= -8 || x_num_spaces >= 8 || y_num_spaces <= -8 || y_num_spaces >= 8) {
+		return;
+	}
+	if (ABSVAL(x_num_spaces) != ABSVAL(y_num_spaces)) {
+		return;	// only handle equal number of tile movements each way
+	}
+	int num_spaces = ABSVAL(x_num_spaces);
+
 	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
 	MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 	_delay_cycles(MOTOR_AWAKE_DELAY);
-
-	if (toCorner) {
-		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
-		MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
-	} else {
-		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
+	if (x_num_spaces < 0) {
 		MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
+	} else {
+		MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
+	}
+	if (y_num_spaces < 0) {
+		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
+	} else {
+		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
 	}
 
+	int i;
 	int j;
-	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
-		stepX();
+	for (i = 0; i < num_spaces; i++) {
+		for (j = 0; j < STEPS_PER_SPACE; j++) {
+			stepX();
+			stepY();
+		}
 	}
-
-	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
-		stepY();
-	}
-
 	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
 	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 	_delay_cycles(MOTOR_MOVE_DELAY);
 }
 
-void moveToCaptureCell(int diagonal)
+void moveHalfTile(int xdir, int ydir)
 {
-	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
-	if (diagonal)
+	if (ydir != 0)
 	{
 		MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
-	}
-	_delay_cycles(MOTOR_AWAKE_DELAY);
-
-	// Move to the capture location
-	MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
-	if (diagonal)
-	{
-		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
-	}
-
-	int j;
-	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
-		stepX();
-	}
-	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
-		if (diagonal)
+		_delay_cycles(MOTOR_AWAKE_DELAY);
+		if (ydir > 0)
 		{
-			stepY();
+			MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
 		}
-	}
-	_delay_cycles(MOTOR_MOVE_DELAY);
-
-	disengageMagnet();
-
-	// Move to the original location
-	MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
-	if (diagonal)
-	{
-		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction up
-	}
-
-	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
-		stepX();
-	}
-	if (diagonal)
-	{
+		else
+		{
+			MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
+		}
+		int j;
 		for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
 			stepY();
 		}
-	}
-
-
-	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
-	if (diagonal)
-	{
 		MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+		_delay_cycles(MOTOR_MOVE_DELAY);
 	}
-	_delay_cycles(MOTOR_MOVE_DELAY);
+	if (xdir != 0)
+	{
+		if (xdir > 0)
+		{
+			MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
+		}
+		else
+		{
+			MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
+		}
+		int j;
+		for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
+			stepX();
+		}
+		MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+		_delay_cycles(MOTOR_MOVE_DELAY);
+	}
 }
 
 void moveToButtons()
@@ -338,10 +330,32 @@ void moveRC(int row, int column, int engage) {
 	movement.rStart = gTableCursor.r;
 	movement.rEnd = row;
 
-	move(movement, engage);
+	move(movement, engage, FALSE);
 }
 
-void move(piece_movement movement, int engage) {
+void process_moves(piece_movement move1, piece_movement move2)
+{
+	int move1Valid = move1.rStart != -1 && move1.cStart != -1 ? TRUE : FALSE;
+	int move2Valid = move2.rStart != -1 && move2.cStart != -1 ? TRUE : FALSE;
+	if (move1Valid)
+	{
+		// use corner if knight or capture
+		int useCorner = (move1.rEnd != move1.rStart && move1.cEnd != move1.cStart
+				&& ABSVAL(move1.rEnd - move1.rStart) != ABSVAL(move1.cEnd - move1.cStart))
+				|| (move1.rEnd == -1 && move1.cEnd == -1) ? TRUE : FALSE;
+		move(move1, TRUE, useCorner);
+	}
+	if (move2Valid)
+	{
+		// use corner if knight or castle
+		int useCorner = (move2.rEnd != move2.rStart && move2.cEnd != move2.cStart
+				&& ABSVAL(move2.rEnd - move2.rStart) != ABSVAL(move2.cEnd - move2.cStart))
+				|| (move1.rEnd != -1 && move1.cEnd != -1) ? TRUE : FALSE;
+		move(move2, TRUE, useCorner);
+	}
+}
+
+void move(piece_movement movement, int engage, int useCorner) {
 	// Compute difference from cursor to start location
 	int x_move;
 	int y_move;
@@ -355,26 +369,58 @@ void move(piece_movement movement, int engage) {
 	if (engage) {
 		// pull magnet up
 		engageMagnet();
-		// move to corner of square (to avoid collisions)
-		moveBetweenCornerAndCenter(TRUE);
+	}
+
+	int useCornerUpperLeft = movement.rStart <= 3 ? TRUE : FALSE;
+	if (useCorner) {
+		if (useCornerUpperLeft) {
+			// move to upper right corner
+			moveHalfTile(1, 1);
+		} else {
+			// move to lower left corner
+			moveHalfTile(-1, -1);
+		}
 	}
 
 	if (movement.rEnd == -1 && movement.cEnd == -1)
 	{
 		int captureRow = gCaptureIndex / 2;
 		int captureOffset = gCaptureIndex % 2;
+		int isLastCapture = gCaptureIndex == 14 ? TRUE : FALSE;
+		if (isLastCapture) {
+			captureRow--;	// don't go beyond top edge
+		}
 		x_move = 7 - movement.cStart;
 		y_move = captureRow - movement.rStart;
+		if (useCorner && !useCornerUpperLeft) {
+			// adjust for corner difference
+			y_move++;
+			x_move++;
+		}
 
 		// move to edge
 		moveX(x_move);
 		moveY(y_move);
 
-		moveToCaptureCell(captureOffset == 0 ? TRUE : FALSE);
+		if (isLastCapture) {
+			moveHalfTile(1, 1);
+			disengageMagnet();
+			moveHalfTile(-1, -1);
+		} else {
+			if (captureOffset == 0) {
+				moveHalfTile(1, -1);
+				disengageMagnet();
+				moveHalfTile(-1, 1);
+			} else {
+				moveHalfTile(1, 0);
+				disengageMagnet();
+				moveHalfTile(-1, 0);
+			}
+		}
 
-		if (engage) {
-			// move to center of square
-			moveBetweenCornerAndCenter(FALSE);
+		if (useCorner) {
+			// go to center of the rightmost column, whatever row has captured piece
+			moveHalfTile(-1, -1);
 		}
 
 		// set cursor to dest
@@ -389,13 +435,29 @@ void move(piece_movement movement, int engage) {
 		y_move = movement.rEnd - movement.rStart;
 
 		// move the piece to the destination
-		moveX(x_move);
-		moveY(y_move);
+		if (x_move == 0) {
+			moveY(y_move);
+		} else if (y_move == 0) {
+			moveX(x_move);
+		} else if (ABSVAL(x_move) == ABSVAL(y_move)) {
+			// move in diagonal
+			moveXY(x_move, y_move);
+		} else {
+			// move sequentially
+			moveY(y_move);
+			moveX(x_move);
+		}
+
+		if (useCorner) {
+			// move to center of square
+			if (useCornerUpperLeft) {
+				moveHalfTile(-1, -1);
+			} else {
+				moveHalfTile(1, 1);
+			}
+		}
 
 		if (engage) {
-			// move to center of square
-			moveBetweenCornerAndCenter(FALSE);
-			// pull magnet down
 			disengageMagnet();
 		}
 

@@ -88,22 +88,13 @@ void main()
 				if (ret == TRUE || ret == GAMEOVER_WITH_MOVE)
 				{
 					// execute server response to move pieces - can be one or two moves
-					move(response1, TRUE);
-					// update the current board state to include movement
-					gBoardState.currentState[response1.rStart][response1.cStart] = 0;
-					if (response1.rEnd != -1 && response1.cEnd != -1)
-					{
-						gBoardState.currentState[response1.rEnd][response1.cEnd] = 1;
-					}
+					process_moves(response1, response2);
+
+					// update the board state with the new moves
+					updateCurrentStateWithMove(response1);
 					if (response2.rStart != -1 && response2.cStart != -1)
 					{
-						move(response2, TRUE);
-						// update the current board state to include movement
-						gBoardState.currentState[response2.rStart][response2.cStart] = 0;
-						if (response2.rEnd != -1 && response2.cEnd != -1)
-						{
-							gBoardState.currentState[response2.rEnd][response2.cEnd] = 1;
-						}
+						updateCurrentStateWithMove(response2);
 					}
 
 					if (ret == GAMEOVER_WITH_MOVE)

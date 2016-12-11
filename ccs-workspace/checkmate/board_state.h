@@ -96,6 +96,8 @@ void updateCurrentState(char updateMoveList);
 
 // in the invalid state, compare currentState against validState and return true if identical
 signed char isCurrentStateValid();
+// update currentState with the given parameter
+void updateCurrentStateWithMove(piece_movement move);
 // transfer contents of currentState into validState
 void copyCurrentStateIntoValid();
 
