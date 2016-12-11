@@ -26,6 +26,7 @@
 #define MUX_SELECT3_PIN		GPIO_PIN7
 #define MUX_SELECT4_PORT	GPIO_PORT_P4
 #define MUX_SELECT4_PIN		GPIO_PIN5
+
 #define MUX_READ1_PORT		GPIO_PORT_P4
 #define MUX_READ1_PIN		GPIO_PIN4
 #define MUX_READ2_PORT		GPIO_PORT_P4
@@ -35,9 +36,14 @@
 #define MUX_READ4_PORT		GPIO_PORT_P6
 #define MUX_READ4_PIN		GPIO_PIN1
 
-#define TRUE 1
-#define FALSE 0
-#define ERROR -1
+#define TRUE 				1
+#define FALSE 				0
+#define ERROR 				-1
+#define GAMEOVER_NO_MOVE	2
+#define GAMEOVER_WITH_MOVE	3
+
+#define STATUS_NORMAL		1
+#define STATUS_INVALID		0
 
 /** Typedefs **/
 typedef struct {
@@ -90,6 +96,11 @@ void updateCurrentState(char updateMoveList);
 
 // in the invalid state, compare currentState against validState and return true if identical
 signed char isCurrentStateValid();
+// transfer contents of currentState into validState
+void copyCurrentStateIntoValid();
+
+// sets the LED to the appropriate state (on if invalid, off if valid)
+void setStatusLed(signed char status);
 
 // examine moveList and return TRUE and write to *move if chess move detected, FALSE otherwise
 // can also return ERROR if an invalid move is detected from MSP

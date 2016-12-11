@@ -61,12 +61,6 @@ void initUART()
 	// init globals
 	gReceiveBufferIndex = 0;
 
-	// init USCI module
-	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
-			GPIO_PIN0, GPIO_PRIMARY_MODULE_FUNCTION);
-	MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
-	MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0);
-
 	// for debugging, initialize good pins on MSP
 	const uint8_t port_mapping[] =
 	{
@@ -89,6 +83,7 @@ void initUART()
 	MAP_GPIO_setAsInputPin(UART_SHDN_PORT, UART_SHDN_PIN);
 	MAP_GPIO_setOutputHighOnPin(UART_SHDN_PORT, UART_SHDN_PIN);
 
+	// init USCI module
 	MAP_UART_initModule(UART_EUSCI_BASE, &uartConfig);
 	MAP_UART_enableModule(UART_EUSCI_BASE);
 
@@ -151,6 +146,23 @@ signed char receive(piece_movement* move, piece_movement* other_move)
 		other_move->cEnd = 0xFF;
 	}
 
+	int game_over = FALSE;
+	if ((first & 0x40) != 0)
+	{
+		// if 2nd MSB set, game is over
+		first = first & ~0x40;
+		if (first == 0x00)
+		{
+			// no other moves to process
+			gReceiveBufferIndex = 0;
+			return GAMEOVER_NO_MOVE;
+		}
+		else
+		{
+			game_over = TRUE;
+		}
+	}
+
 	move->rStart = first / 8;
 	move->cStart = first % 8;
 	if (second != 0xFF)
@@ -166,7 +178,7 @@ signed char receive(piece_movement* move, piece_movement* other_move)
 
 	// reset index, discard any remaining message
 	gReceiveBufferIndex = 0;
-	return TRUE;
+	return game_over == TRUE ? GAMEOVER_WITH_MOVE : TRUE;
 }
 
 void debugGameLoop()

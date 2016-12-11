@@ -24,31 +24,115 @@ void main()
 	//initUART();
 	//helloWorldSend();
 	//helloWorldReceive();
+	//MAP_Interrupt_enableMaster();
+	//debugGameLoop();
 
 	/** Piece sensing debugging **/
-	initSensors();
+	//initSensors();
 
 	// initialize all interrupts before running main game loop
 	//MAP_Interrupt_enableMaster();
 	//debugGameLoop();
+//	while (1)
+//	{
+//		signed char status;
+//		piece_movement move;
+//		readNextState();
+//		updateChangeStateCounter();
+//		updateCurrentState(TRUE);
+//		status = constructPieceMovement(&move);
+//		if (status == TRUE)
+//		{
+//			;
+//			char x = 0;
+//		}
+//		else if (status == ERROR)
+//		{
+//			gBoardState.moveListIndex = 0;	// reset
+//		}
+//		_delay_cycles(5000);
+//	}
+
+	/** Begin game loop **/
+	// initialize everything
+	initMotors();
+	initSensors();
+	initUART();
+	MAP_Interrupt_enableMaster();
+
+	// run main loop
+	char status = STATUS_NORMAL;
 	while (1)
 	{
-		signed char status;
-		piece_movement move;
+		// read from the piece sensors
 		readNextState();
 		updateChangeStateCounter();
-		updateCurrentState(TRUE);
-		status = constructPieceMovement(&move);
-		if (status == TRUE && move.cStart == 0)
+		if (status == STATUS_NORMAL)
 		{
-			;
-			char x = 0;
+			// update the piece change list
+			updateCurrentState(TRUE);
+
+			// parse piece changes into movement
+			piece_movement move;
+			signed char ret;
+			ret = constructPieceMovement(&move);
+			if (ret == TRUE)
+			{
+				// send movement to server
+				send(&move);
+
+				// receive responses
+				piece_movement response1, response2;
+				ret = receive(&response1, &response2);
+				if (ret == TRUE || ret == GAMEOVER_WITH_MOVE)
+				{
+					// execute server response to move pieces - can be one or two moves
+					move(response1, TRUE);
+					if (response2.rStart != 0xFF && response2.rEnd != 0xFF)
+					{
+						move(response2, TRUE);
+					}
+
+					if (ret == GAMEOVER_WITH_MOVE)
+					{
+						// player lost
+						break;
+					}
+
+					// refresh valid state
+					copyCurrentStateIntoValid();
+				}
+				else if (ret == GAMEOVER_NO_MOVE)
+				{
+					// player won
+					break;
+				}
+				else if (ret == ERROR)
+				{
+					// server responds that player move is invalid
+					setStatusLed(FALSE);
+					status = STATUS_INVALID;
+				}
+			}
+			else if (ret == ERROR)
+			{
+				// move parsing senses invalid move
+				setStatusLed(FALSE);
+				status = STATUS_INVALID;
+			}
 		}
-		else if (status == ERROR)
+		else if (status == STATUS_INVALID)
 		{
-			gBoardState.moveListIndex = 0;	// reset
+			// update current state and see if it matches last valid state
+			updateCurrentState(FALSE);
+			signed char ret;
+			ret = isCurrentStateValid();
+			if (ret == TRUE)
+			{
+				setStatusLed(TRUE);
+				status = STATUS_NORMAL;
+			}
 		}
-		_delay_cycles(5000);
 	}
 
     while(1)

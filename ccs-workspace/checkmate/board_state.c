@@ -10,6 +10,12 @@
 
 void initSensors()
 {
+	// init status indicator
+	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
+			GPIO_PIN0, GPIO_PRIMARY_MODULE_FUNCTION);
+	MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0);
+	MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
+
 	// init pins
 	MAP_GPIO_setAsOutputPin(MUX_SELECT1_PORT, MUX_SELECT1_PIN);
 	MAP_GPIO_setAsOutputPin(MUX_SELECT2_PORT, MUX_SELECT2_PIN);
@@ -90,10 +96,10 @@ void readNextState()
 		value = MAP_GPIO_getInputPinValue(MUX_READ4_PORT, MUX_READ4_PIN);
 		piece[3] = (value == GPIO_INPUT_PIN_LOW) ? 1 : 0;
 
-		// TODO manual muxing here
+		// mux through software
 		for (j = 0; j < 4; j++)
 		{
-			gBoardState.nextState[i % 8][1 - (i / 8) + (j * 2)] = piece[j];
+			gBoardState.nextState[(i / 8) + (j * 2)][i % 8] = piece[j];
 		}
 
 		// debugging
@@ -146,7 +152,7 @@ void updateCurrentState(char updateMoveList)
 					gBoardState.moveList[gBoardState.moveListIndex].r = r;
 					gBoardState.moveList[gBoardState.moveListIndex].c = c;
 					gBoardState.moveList[gBoardState.moveListIndex].dir = 1 - gBoardState.currentState[r][c];
-					gBoardState.moveListIndex++;
+					gBoardState.moveListIndex = (gBoardState.moveListIndex + 1) % MOVES_BUFFER_LENGTH;
 				}
 
 				// update the currentState
@@ -178,6 +184,30 @@ signed char isCurrentStateValid()
 	gBoardState.moveListIndex = 0;
 	// board back to last valid state
 	return TRUE;
+}
+
+void copyCurrentStateIntoValid()
+{
+	char r, c;
+	for (r = 0; r < BOARD_ROWS; r++)
+	{
+		for (c = 0; c < BOARD_COLS; c++)
+		{
+			gBoardState.validState[r][c] = gBoardState.currentState[r][c];
+		}
+	}
+}
+
+void setStatusLed(signed char status)
+{
+	if (status == TRUE)
+	{
+		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
+	}
+	else if (status == FALSE)
+	{
+		MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
+	}
 }
 
 signed char constructPieceMovement(piece_movement* move)
@@ -230,57 +260,61 @@ signed char constructPieceMovement(piece_movement* move)
 			{
 				rEnd1 = r;
 				cEnd1 = c;
-				if (rEnd1 == rStart1 && cEnd1 == cStart1)
+				// continue special logic if two pieces came off board
+				if (rStart2 != -1 && cStart2 != -1)
 				{
-					// piece moved to where first piece moved off - adjust start position
-					rStart1 = rStart2;
-					cStart1 = cStart2;
-					break;
-				}
-				else if (rEnd1 == rStart2 && cEnd1 == cStart2)
-				{
-					// piece moved to where second moved off, start is ok
-					break;
-				}
-				else if (rStart2 != -1 && cStart2 != -1)	// only continue logic for two pieces coming off board
-				{
-					// piece moved to where neither moved off
-					// check for en passant
-					if (cEnd1 == cStart1)
+					if (rEnd1 == rStart1 && cEnd1 == cStart1)
 					{
-						// piece moved to same column as first piece coming off - adjust start position
+						// piece moved to where first piece moved off - adjust start position
 						rStart1 = rStart2;
 						cStart1 = cStart2;
 						break;
 					}
-					else if (cEnd1 == cStart2)
+					else if (rEnd1 == rStart2 && cEnd1 == cStart2)
 					{
-						// piece moved to same column as second coming off, start is ok
+						// piece moved to where second moved off, start is ok
 						break;
 					}
 					else
 					{
-						// check for castle
-						if ((rStart1 == 0 || rStart1 == 7) && cStart1 == 4)
+						// piece moved to where neither moved off
+						// check for en passant
+						if (cEnd1 == cStart1)
 						{
-							// first piece moved from valid king start point
-							isCastle = TRUE;
-						}
-						else if ((rStart2 == 0 || rStart2 == 7) && cStart2 == 4)
-						{
-							// second piece moved from valid king start point
-							char rtmp = rStart1;
-							char ctmp = cStart1;
+							// piece moved to same column as first piece coming off - adjust start position
 							rStart1 = rStart2;
 							cStart1 = cStart2;
-							rStart2 = rtmp;
-							cStart2 = ctmp;	// swap so king point is first in ordering
-							isCastle = TRUE;
+							break;
+						}
+						else if (cEnd1 == cStart2)
+						{
+							// piece moved to same column as second coming off, start is ok
+							break;
 						}
 						else
 						{
-							// nothing else seems possible at this point
-							return ERROR;
+							// check for castle
+							if ((rStart1 == 0 || rStart1 == 7) && cStart1 == 4)
+							{
+								// first piece moved from valid king start point
+								isCastle = TRUE;
+							}
+							else if ((rStart2 == 0 || rStart2 == 7) && cStart2 == 4)
+							{
+								// second piece moved from valid king start point
+								char rtmp = rStart1;
+								char ctmp = cStart1;
+								rStart1 = rStart2;
+								cStart1 = cStart2;
+								rStart2 = rtmp;
+								cStart2 = ctmp;	// swap so king point is first in ordering
+								isCastle = TRUE;
+							}
+							else
+							{
+								// nothing else seems possible at this point
+								return ERROR;
+							}
 						}
 					}
 				}
@@ -308,12 +342,18 @@ signed char constructPieceMovement(piece_movement* move)
 					(rStart1 == 7 && cStart1 == 4 && rStart2 == 7 && cStart2 == 0 && rEnd1 == 7 && cEnd1 == 2 && rEnd2 == 7 && cEnd2 == 3))
 				{
 					isCastleFinished = TRUE;
+					break;
 				}
 				else
 				{
 					// not a castle, so this seems invalid
 					return ERROR;
 				}
+			}
+			else
+			{
+				// no non-castle move requires two pieces to come onto board - seems invalid
+				return ERROR;
 			}
 		}
 	}

@@ -59,15 +59,20 @@ def computer_move(node, board, engine, difficulty):
     # Compute response
     engine.position(board)
     move, ponder = engine.go(depth=difficulty)
-    board.push(move)
 
     print "Stockfish move: " + str(move)
     write_move_to_serial(board, move)
+    board.push(move)
     node = node.add_variation(move)
     return node
 
 def write_move_to_serial(board, move):
     ser = Comm.getSerial()
+    # push move temporarily to see if it causes game over
+    board.push(move)
+    game_over = board.is_game_over()
+    board.pop()
+    
     # Write auxilary moves, e.g. for capture or special move
     if board.is_capture(move):
         capture_tile = ''
@@ -81,7 +86,9 @@ def write_move_to_serial(board, move):
                 raise Exception('unknown en passant command ' + str(move))
         else:
             capture_tile = str(move)[2:4]
-        code = encode_uci(capture_tile, True)
+        code = encode_uci(capture_tile, True, game_over)
+        if game_over:
+            game_over = False   # prevent next move from setting bit
         ser.write(code)
     elif board.is_castling(move):
         king_dest = str(move)[2:4]
@@ -96,12 +103,14 @@ def write_move_to_serial(board, move):
             rook_uci = 'h8f8'
         else:
             raise Exception('unknown castling command ' + str(move))
-        code = encode_uci(rook_uci, True)
+        code = encode_uci(rook_uci, True, game_over)
+        if game_over:
+            game_over = False   # prevent next move from setting bit
         ser.write(code)
 
     # write the main move
     code = encode_uci(str(move))
-    ser.write(code)
+    ser.write(code, False, game_over)
 
 def debug_shell_move(node, board, write_to_com=False):
     while True:
@@ -133,40 +142,38 @@ def main():
     engine = chess.uci.popen_engine(args['engine'])
     engine.uci()
 
+    board.reset()
+
+    # Create a game and set headers.
+    game = chess.pgn.Game()
+    game.headers["Black"] = engine.name
+    game.headers["White"] = engine.name
+
+    game.setup(board)
+    node = game
+
+    print board
+
     while True:
-        board.reset()
-
-        # Create a game and set headers.
-        game = chess.pgn.Game()
-        game.headers["Black"] = engine.name
-        game.headers["White"] = engine.name
-
-        game.setup(board)
-        node = game
-
+        node = player_move(node, board)
         print board
+        # player won game, so send a game over signal
+        if board.is_game_over():
+            ser = Comm.getSerial()
+            ser.write('\x40\x00')   # 2nd MSB set; empty move indicates nothing to do client side
+            break
 
-        while True:
-            if board.is_game_over(): break
-
-            node = player_move(node, board)
-            print board
-            #node = computer_move(node, board, engine, 3)
-            node = debug_shell_move(node, board, True)
-            print board
-
-            '''
-            if board.is_game_over(): break
-            node = computer_move(node, board, engine, DIFFICULTY)
-            print board
-            '''
-
+        #node = computer_move(node, board, engine, DIFFICULTY)
+        node = debug_shell_move(node, board, True)
         print board
-        print board.fen()
+        if board.is_game_over():
+            break
 
-        game.headers["Result"] = board.result()
-        print game
-        break
+    print board
+    print board.fen()
+
+    game.headers["Result"] = board.result()
+    print game
 
 if __name__ == '__main__':
     main()

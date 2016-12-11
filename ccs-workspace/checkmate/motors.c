@@ -60,8 +60,8 @@ void initMotors()
 	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 
 	// set input button pins
-	MAP_GPIO_setAsInputPin(X_HOMING_BUTTON_PORT, X_HOMING_BUTTON_PIN);
-	MAP_GPIO_setAsInputPin(Y_HOMING_BUTTON_PORT, Y_HOMING_BUTTON_PIN);
+	//MAP_GPIO_setAsInputPin(X_HOMING_BUTTON_PORT, X_HOMING_BUTTON_PIN);
+	//MAP_GPIO_setAsInputPin(Y_HOMING_BUTTON_PORT, Y_HOMING_BUTTON_PIN);
 
 	// init globals
 	gTableCursor.r = 0;
@@ -225,27 +225,37 @@ void move(piece_movement movement, int engage) {
 	if (movement.rEnd == -1 && movement.cEnd == -1)
 	{
 		// TODO move piece to capture space
-		return;
 	}
+	else
+	{
+		// Compute position difference
+		x_move = movement.cEnd - movement.cStart;
+		y_move = movement.rEnd - movement.rStart;
 
-	// Compute position difference
-	x_move = movement.cEnd - movement.cStart;
-	y_move = movement.rEnd - movement.rStart;
+		// move the piece to the destination
+		moveX(x_move);
+		moveY(y_move);
 
-	// move the piece to the destination
-	moveX(x_move);
-	moveY(y_move);
-
-	if (engage) {
-		// move to center of square
-		moveBetweenCornerAndCenter(FALSE);
-		// pull magnet down
-		disengageMagnet();
+		if (engage) {
+			// move to center of square
+			moveBetweenCornerAndCenter(FALSE);
+			// pull magnet down
+			disengageMagnet();
+		}
 	}
 
 	// set cursor to destination
 	gTableCursor.r = movement.rEnd;
 	gTableCursor.c = movement.cEnd;
+
+	if (engage) {
+		// update the current board state to include movement
+		gBoardState.currentState[movement.rStart][movement.cStart] = 0;
+		if (movement.rEnd != -1 && movement.cEnd != -1)
+		{
+			gBoardState.currentState[movement.rEnd][movement.cEnd] = 1;
+		}
+	}
 }
 
 void engageMagnet()
