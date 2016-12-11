@@ -68,6 +68,7 @@ typedef struct {
 
 /** Globals **/
 tableCursor gTableCursor;
+int gCaptureIndex;
 
 /** Functions **/
 // do any setup to send commands to motor driver

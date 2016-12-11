@@ -66,6 +66,7 @@ void initMotors()
 	// init globals
 	gTableCursor.r = 0;
 	gTableCursor.c = 0;
+	gCaptureIndex = 0;
 }
 
 void debugMotorDemo() {
@@ -176,7 +177,8 @@ void moveY(int num_spaces) {
 	_delay_cycles(MOTOR_MOVE_DELAY);
 }
 
-void moveBetweenCornerAndCenter(int toCorner) {
+void moveBetweenCornerAndCenter(int toCorner)
+{
 	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
 	MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 	_delay_cycles(MOTOR_AWAKE_DELAY);
@@ -193,6 +195,56 @@ void moveBetweenCornerAndCenter(int toCorner) {
 		stepX();
 		stepY();
 	}
+	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+	_delay_cycles(MOTOR_MOVE_DELAY);
+}
+
+void moveToCaptureCell(int diagonal)
+{
+	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+	if (diagonal)
+	{
+		MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
+	}
+	_delay_cycles(MOTOR_AWAKE_DELAY);
+
+	// Move to the capture location
+	MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
+	if (diagonal)
+	{
+		MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
+	}
+
+	int j;
+	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
+		// interleave steps to both motors
+		stepX();
+		if (diagonal)
+		{
+			stepY();
+		}
+	}
+	_delay_cycles(MOTOR_MOVE_DELAY);
+
+	disengageMagnet();
+
+	// Move to the original location
+	MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
+	if (diagonal)
+	{
+		MAP_GPIO_setOutputLowOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
+	}
+
+	for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
+		// interleave steps to both motors
+		stepX();
+		if (diagonal)
+		{
+			stepY();
+		}
+	}
+
 	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
 	MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 	_delay_cycles(MOTOR_MOVE_DELAY);
@@ -289,6 +341,25 @@ void move(piece_movement movement, int engage) {
 	if (movement.rEnd == -1 && movement.cEnd == -1)
 	{
 		// TODO move piece to capture space
+		int captureRow = gCaptureIndex / 2;
+		int captureOffset = gCaptureIndex % 2;
+		x_move = 0 - movement.cStart;
+		y_move = captureRow - movement.rStart;
+
+		// move to edge
+		moveX(x_move);
+		moveY(y_move);
+
+		moveToCaptureCell(captureOffset == 0 ? TRUE : FALSE);
+
+		if (engage) {
+			// move to center of square
+			moveBetweenCornerAndCenter(FALSE);
+		}
+
+		// set cursor to dest
+		gTableCursor.r = captureRow;
+		gTableCursor.c = 0;
 	}
 	else
 	{
@@ -306,11 +377,11 @@ void move(piece_movement movement, int engage) {
 			// pull magnet down
 			disengageMagnet();
 		}
-	}
 
-	// set cursor to destination
-	gTableCursor.r = movement.rEnd;
-	gTableCursor.c = movement.cEnd;
+		// set cursor to destination
+		gTableCursor.r = movement.rEnd;
+		gTableCursor.c = movement.cEnd;
+	}
 
 	if (engage) {
 		// update the current board state to include movement
