@@ -62,6 +62,7 @@ void initUART()
 	gReceiveBufferIndex = 0;
 
 	// for debugging, initialize good pins on MSP
+	/*
 	const uint8_t port_mapping[] =
 	{
 		PM_NONE, PM_NONE, PM_NONE, PM_UCA2TXD, PM_NONE, PM_NONE, PM_UCA2RXD, PM_NONE
@@ -72,12 +73,13 @@ void initUART()
 			GPIO_PIN6, GPIO_PRIMARY_MODULE_FUNCTION);
 	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P3,
 			GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
+	*/
 
 	// set transmit and receive pins for uart
-//	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(UART_RX_PORT,
-//			UART_RX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
-//	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(UART_TX_PORT,
-//			UART_TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
+	MAP_GPIO_setAsPeripheralModuleFunctionInputPin(UART_RX_PORT,
+			UART_RX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
+	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(UART_TX_PORT,
+			UART_TX_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
 
 	// set chip enable pin
 	MAP_GPIO_setAsOutputPin(UART_SHDN_PORT, UART_SHDN_PIN);

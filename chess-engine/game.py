@@ -163,8 +163,8 @@ def main():
             ser.write('\x40\x00')   # 2nd MSB set; empty move indicates nothing to do client side
             break
 
-        #node = computer_move(node, board, engine, DIFFICULTY)
-        node = debug_shell_move(node, board, True)
+        node = computer_move(node, board, engine, DIFFICULTY)
+        #node = debug_shell_move(node, board, True)
         print board
         if board.is_game_over():
             break
