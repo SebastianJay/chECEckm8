@@ -242,6 +242,8 @@ void moveHalfTile(int xdir, int ydir)
 	}
 	if (xdir != 0)
 	{
+		MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+		_delay_cycles(MOTOR_AWAKE_DELAY);
 		if (xdir > 0)
 		{
 			MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right

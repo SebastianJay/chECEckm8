@@ -63,7 +63,7 @@
 #define Y_HOMING_BUTTON_PORT	GPIO_PORT_P6
 #define Y_HOMING_BUTTON_PIN		GPIO_PIN7
 
-#define ABSVAL(x)	x >= 0 ? x : -x
+#define ABSVAL(x)	((x) >= 0 ? (x) : -(x))
 
 /** Structs **/
 typedef struct {

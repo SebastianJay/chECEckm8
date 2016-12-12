@@ -5,56 +5,9 @@
 #include "motors.h"
 #include "board_state.h"
 
-void main()
+void mainGameLoop()
 {
-	// Stop watchdog timer
-    MAP_WDT_A_holdTimer();
-
-	// Setup clock
-	MAP_CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_12);
-	MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
-
-	/** Servo, motors debugging **/
-	//initMotors();
-	//moveToButtons();
-	//debugMotorDemo();
-
-	/** UART debugging **/
-	//initUART();
-	//helloWorldSend();
-	//helloWorldReceive();
-	//MAP_Interrupt_enableMaster();
-	//debugGameLoop();
-
-	/** Piece sensing debugging **/
-	//initSensors();
-
-	// initialize all interrupts before running main game loop
-	//MAP_Interrupt_enableMaster();
-	//debugGameLoop();
-
-//	while (1)
-//	{
-//		signed char status;
-//		piece_movement move;
-//		readNextState();
-//		updateChangeStateCounter();
-//		updateCurrentState(TRUE);
-//		status = constructPieceMovement(&move);
-//		if (status == TRUE)
-//		{
-//			;
-//			char x = 0;
-//		}
-//		else if (status == ERROR)
-//		{
-//			gBoardState.moveListIndex = 0;	// reset
-//		}
-//		_delay_cycles(5000);
-//	}
-
-	/** Begin game loop */
-	// initialize everything
+	// initialization
 	initMotors();
 	initSensors();
 	initUART();
@@ -138,6 +91,60 @@ void main()
 			}
 		}
 	}
+}
+
+void debugging()
+{
+	/** Servo, motors debugging **/
+	//initMotors();
+	//moveToButtons();
+	//debugMotorDemo();
+
+	/** UART debugging **/
+	//initUART();
+	//helloWorldSend();
+	//helloWorldReceive();
+	//MAP_Interrupt_enableMaster();
+	//debugGameLoop();
+
+	/** Piece sensing debugging **/
+	//initSensors();
+
+	// initialize all interrupts before running main game loop
+	//MAP_Interrupt_enableMaster();
+	//debugGameLoop();
+
+//	while (1)
+//	{
+//		signed char status;
+//		piece_movement move;
+//		readNextState();
+//		updateChangeStateCounter();
+//		updateCurrentState(TRUE);
+//		status = constructPieceMovement(&move);
+//		if (status == TRUE)
+//		{
+//			;
+//			char x = 0;
+//		}
+//		else if (status == ERROR)
+//		{
+//			gBoardState.moveListIndex = 0;	// reset
+//		}
+//		_delay_cycles(5000);
+//	}
+}
+
+void main()
+{
+	// Stop watchdog timer
+    MAP_WDT_A_holdTimer();
+
+	// Setup clock
+	MAP_CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_12);
+	MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
+
+	mainGameLoop();
 
     while(1)
     {
