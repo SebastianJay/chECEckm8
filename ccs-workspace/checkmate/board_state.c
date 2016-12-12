@@ -26,6 +26,19 @@ void initSensors()
 	MAP_GPIO_setAsInputPin(MUX_READ3_PORT, MUX_READ3_PIN);
 	MAP_GPIO_setAsInputPin(MUX_READ4_PORT, MUX_READ4_PIN);
 
+	// init status LEDs
+	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN0, GPIO_PRIMARY_MODULE_FUNCTION);
+	MAP_GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN0);
+	MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN0);
+
+	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN1, GPIO_PRIMARY_MODULE_FUNCTION);
+	MAP_GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN1);
+	MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN1);
+
+	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION);
+	MAP_GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN2);
+	MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN2);
+
 	// init globals
 	char r, c, i;
 	for (r = 0; r < BOARD_ROWS; r++)
@@ -211,11 +224,27 @@ void setStatusLed(signed char status)
 {
 	if (status == TRUE)
 	{
-		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN0);
+		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN0);
+		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN1);
+		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN2);
 	}
-	else if (status == FALSE)
+	else if (status == FALSE || status == ERROR)
 	{
-		MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
+		MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN0);
+		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN1);
+		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN2);
+	}
+	else if (status == GAMEOVER_NO_MOVE)
+	{
+		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN0);
+		MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN1);
+		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN2);
+	}
+	else if (status == GAMEOVER_WITH_MOVE)
+	{
+		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN0);
+		MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN1);
+		MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN2);
 	}
 }
 

@@ -40,6 +40,9 @@ void mainGameLoop()
 				ret = receive(&response1, &response2);
 				if (ret == TRUE || ret == GAMEOVER_WITH_MOVE)
 				{
+					// pause before executing move
+					_delay_cycles(ONE_SECOND_TICKS);
+
 					// execute server response to move pieces - can be one or two moves
 					process_moves(response1, response2);
 
@@ -53,6 +56,7 @@ void mainGameLoop()
 					if (ret == GAMEOVER_WITH_MOVE)
 					{
 						// player lost
+						setStatusLed(GAMEOVER_WITH_MOVE);
 						break;
 					}
 
@@ -62,19 +66,20 @@ void mainGameLoop()
 				else if (ret == GAMEOVER_NO_MOVE)
 				{
 					// player won
+					setStatusLed(GAMEOVER_NO_MOVE);
 					break;
 				}
 				else if (ret == ERROR)
 				{
 					// server responds that player move is invalid
-					setStatusLed(FALSE);
+					setStatusLed(ERROR);
 					status = STATUS_INVALID;
 				}
 			}
 			else if (ret == ERROR)
 			{
 				// move parsing senses invalid move
-				setStatusLed(FALSE);
+				setStatusLed(ERROR);
 				status = STATUS_INVALID;
 			}
 		}
@@ -133,6 +138,22 @@ void debugging()
 //		}
 //		_delay_cycles(5000);
 //	}
+
+//	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P1, GPIO_PIN0, GPIO_PRIMARY_MODULE_FUNCTION);
+//	MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN0);
+//	MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN0);
+
+	//MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN0, GPIO_PRIMARY_MODULE_FUNCTION);
+	//MAP_GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN0);
+	//MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN0);
+
+	//MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN1, GPIO_PRIMARY_MODULE_FUNCTION);
+	//MAP_GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN1);
+	//MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN1);
+
+//	MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION);
+//	MAP_GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN2);
+//	MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN2);
 }
 
 void main()
@@ -144,6 +165,7 @@ void main()
 	MAP_CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_12);
 	MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
 
+	//debugging();
 	mainGameLoop();
 
     while(1)
