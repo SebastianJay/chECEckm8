@@ -56,9 +56,13 @@ def player_move(node, board):
     return node
 
 def computer_move(node, board, engine, difficulty):
+    # Prevent moves to broken tiles
+    legal_moves = list(board.generate_legal_moves())
+    restricted_moves = [move for move in legal_moves if move.uci()[2:4] not in IGNORE_TILES]
+
     # Compute response
     engine.position(board)
-    move, ponder = engine.go(depth=difficulty)
+    move, ponder = engine.go(searchmoves=restricted_moves, depth=difficulty)
 
     print "Stockfish move: " + str(move)
     write_move_to_serial(board, move)
@@ -133,6 +137,8 @@ def main():
         help='Path to a UCI compatible chess engine exe')
     parser.add_argument('-p', '--port', default='/dev/cu.usbmodemM4321001',
         help='Name of a COM port connected to (MSP) client')
+    parser.add_argument('-d', '--depth', default='1',
+        help='Integer depth of search space for computer move')
 
     args = vars(parser.parse_args(sys.argv[1:]))
     Comm.setPort(args['port'])
@@ -141,6 +147,7 @@ def main():
     board = chess.Board()
     engine = chess.uci.popen_engine(args['engine'])
     engine.uci()
+    difficulty = int(args['depth'])
 
     board.reset()
 
@@ -163,7 +170,7 @@ def main():
             ser.write('\x40\x00')   # 2nd MSB set; empty move indicates nothing to do client side
             break
 
-        node = computer_move(node, board, engine, DIFFICULTY)
+        node = computer_move(node, board, engine, difficulty)
         #node = debug_shell_move(node, board, True)
         print board
         if board.is_game_over():

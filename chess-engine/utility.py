@@ -7,7 +7,9 @@
 
 import chess
 
-DIFFICULTY = 1
+IGNORE_TILES = [
+    'd4',        # TODO fix tiles
+]
 
 RANK_MAP = {
     'a' : 0,
