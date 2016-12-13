@@ -7,7 +7,7 @@
 
 import chess
 
-DIFFICULTY = 2
+DIFFICULTY = 1
 
 RANK_MAP = {
     'a' : 0,
@@ -42,6 +42,8 @@ def encode_uci(move, next_move_pending=False, game_over=False):
         i = tmp | 0x00FF  # all 1s in dest represents capture
     elif len(move) == 4:
         i = uci_to_int(move)
+    elif len(move) > 4:
+        i = uci_to_int(move[4:])
     else:
         raise Exception('unexpected arg in encode_uci')
     if next_move_pending:
