@@ -91,7 +91,7 @@ void debugServoLoop()
 		int i;
 		engageMagnet();
 		for (i = 0; i < 1000000; i++);
-		disengageMagnet();
+		disengageMagnet(FALSE);
 		for (i = 0; i < 1000000; i++);
 	}
 }
@@ -406,16 +406,16 @@ void move(piece_movement movement, int engage, int useCorner) {
 
 		if (isLastCapture) {
 			moveHalfTile(1, 1);
-			disengageMagnet();
+			disengageMagnet(FALSE);
 			moveHalfTile(-1, -1);
 		} else {
 			if (captureOffset == 0) {
 				moveHalfTile(1, -1);
-				disengageMagnet();
+				disengageMagnet(FALSE);
 				moveHalfTile(-1, 1);
 			} else {
 				moveHalfTile(1, 0);
-				disengageMagnet();
+				disengageMagnet(FALSE);
 				moveHalfTile(-1, 0);
 			}
 		}
@@ -460,7 +460,7 @@ void move(piece_movement movement, int engage, int useCorner) {
 		}
 
 		if (engage) {
-			disengageMagnet();
+			disengageMagnet(TRUE);
 		}
 
 		// set cursor to destination
@@ -477,10 +477,46 @@ void engageMagnet()
 	_delay_cycles(SERVO_ENGAGE_DELAY);
 }
 
-void disengageMagnet()
+void disengageMagnet(int doCorrection)
 {
+	// DEBUG
+	doCorrection = FALSE;
+	// END DEBUG
+	if (doCorrection) {
+		// wake up motor
+		MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+		_delay_cycles(MOTOR_AWAKE_DELAY);
+	}
+
 	pwmConfig.timerPeriod = SERVO_DELAY_BETWEEN_PULSE + SERVO_PULSE_WIDTH_2;
 	pwmConfig.dutyCycle = SERVO_PULSE_WIDTH_2;
 	MAP_Timer_A_generatePWM(TIMER_A0_BASE, &pwmConfig);
-	_delay_cycles(SERVO_ENGAGE_DELAY);
+
+	if (doCorrection) {
+		// move while servo goes down, then move back
+		// TODO refactor duplicated stepping code
+		MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
+		int i;
+		for (i = 0; i < SERVO_CORRECTION_STEPS; i++)
+		{
+			MAP_GPIO_setOutputHighOnPin(X_STEP_PORT, X_STEP_PIN);
+			_delay_cycles(SERVO_CORRECTION_STEP_TICKS);
+			MAP_GPIO_setOutputLowOnPin(X_STEP_PORT, X_STEP_PIN);
+			_delay_cycles(SERVO_CORRECTION_STEP_TICKS);
+		}
+		_delay_cycles(MOTOR_MOVE_DELAY);
+		MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
+		for (i = 0; i < SERVO_CORRECTION_STEPS; i++)
+		{
+			MAP_GPIO_setOutputHighOnPin(X_STEP_PORT, X_STEP_PIN);
+			_delay_cycles(SERVO_CORRECTION_STEP_TICKS);
+			MAP_GPIO_setOutputLowOnPin(X_STEP_PORT, X_STEP_PIN);
+			_delay_cycles(SERVO_CORRECTION_STEP_TICKS);
+		}
+		_delay_cycles(MOTOR_MOVE_DELAY);
+		MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
+	}
+	else {
+		_delay_cycles(SERVO_ENGAGE_DELAY);
+	}
 }

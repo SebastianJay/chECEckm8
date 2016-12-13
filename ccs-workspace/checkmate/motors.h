@@ -30,10 +30,14 @@
 #define X_STEP_TICKS 	938		// ticks to wait in high or low for x stepping
 #define Y_STEP_TICKS 	938		// ticks to wait in high or low for y stepping
 
+// these values are used to generate a quick and short motor movement to correct for servo throwing error
+#define SERVO_CORRECTION_STEP_TICKS	235
+#define SERVO_CORRECTION_STEPS		680
+
 // STEPS_PER_SPACE = steps needed to travel one chess board space (3.75 in)
 // to calculate this, choose an arbitrary step count and measure its corresponding distance
 //  then use a ratio with your desired distance to find the required step count
-#define STEPS_PER_SPACE	10196
+#define STEPS_PER_SPACE			10196
 #define STEPS_PER_HALF_SPACE	10196 / 2	// used to travel between center and corner
 
 #define STEPS_COLUMN_A 5098
@@ -81,8 +85,8 @@ void initMotors();
 
 // use the servo to move the magnet into position
 void engageMagnet();
-// use the servo to move the magnet out of position
-void disengageMagnet();
+// use the servo to move the magnet out of position, with option of moving motor to compensate for throwing piece off
+void disengageMagnet(int doCorrection);
 
 void moveToButtons();
 
