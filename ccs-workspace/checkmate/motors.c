@@ -29,7 +29,7 @@ void initMotors()
     MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_1);
 
     // choose GPIO pin for PWM
-    MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN4, GPIO_PRIMARY_MODULE_FUNCTION);
+    MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(SERVO_SIGNAL_PORT, SERVO_SIGNAL_PIN, GPIO_PRIMARY_MODULE_FUNCTION);
 
     // Configure Timer A PWM
     MAP_Timer_A_generatePWM(TIMER_A0_BASE, &pwmConfig);
@@ -69,6 +69,7 @@ void initMotors()
 	gTableCursor.r = 0;
 	gTableCursor.c = 0;
 	gCaptureIndex = 0;
+	gSpeedSetting = MOTOR_SPEED_SLOW;
 }
 
 void debugMotorDemo() {
@@ -119,10 +120,17 @@ void debugButtonDemo()
 }
 
 void stepX() {
-	MAP_GPIO_setOutputHighOnPin(X_STEP_PORT, X_STEP_PIN);
-	_delay_cycles(X_STEP_TICKS);
-	MAP_GPIO_setOutputLowOnPin(X_STEP_PORT, X_STEP_PIN);
-	_delay_cycles(X_STEP_TICKS);
+	if (gSpeedSetting == MOTOR_SPEED_FAST) {
+		MAP_GPIO_setOutputHighOnPin(X_STEP_PORT, X_STEP_PIN);
+		_delay_cycles(X_STEP_TICKS_FAST);
+		MAP_GPIO_setOutputLowOnPin(X_STEP_PORT, X_STEP_PIN);
+		_delay_cycles(X_STEP_TICKS_FAST);
+	} else {
+		MAP_GPIO_setOutputHighOnPin(X_STEP_PORT, X_STEP_PIN);
+		_delay_cycles(X_STEP_TICKS);
+		MAP_GPIO_setOutputLowOnPin(X_STEP_PORT, X_STEP_PIN);
+		_delay_cycles(X_STEP_TICKS);
+	}
 }
 
 void moveX(int num_spaces) {
@@ -151,10 +159,17 @@ void moveX(int num_spaces) {
 }
 
 void stepY() {
-	MAP_GPIO_setOutputHighOnPin(Y_STEP_PORT, Y_STEP_PIN);
-	_delay_cycles(Y_STEP_TICKS);
-	MAP_GPIO_setOutputLowOnPin(Y_STEP_PORT, Y_STEP_PIN);
-	_delay_cycles(Y_STEP_TICKS);
+	if (gSpeedSetting == MOTOR_SPEED_FAST) {
+		MAP_GPIO_setOutputHighOnPin(Y_STEP_PORT, Y_STEP_PIN);
+		_delay_cycles(Y_STEP_TICKS_FAST);
+		MAP_GPIO_setOutputLowOnPin(Y_STEP_PORT, Y_STEP_PIN);
+		_delay_cycles(Y_STEP_TICKS_FAST);
+	} else {
+		MAP_GPIO_setOutputHighOnPin(Y_STEP_PORT, Y_STEP_PIN);
+		_delay_cycles(Y_STEP_TICKS);
+		MAP_GPIO_setOutputLowOnPin(Y_STEP_PORT, Y_STEP_PIN);
+		_delay_cycles(Y_STEP_TICKS);
+	}
 }
 
 void moveY(int num_spaces) {
@@ -183,14 +198,12 @@ void moveY(int num_spaces) {
 	_delay_cycles(MOTOR_MOVE_DELAY);
 }
 
+// NOTE speed is less than moveX or moveY by itself since steps are blocking
 void moveXY(int x_num_spaces, int y_num_spaces) {
 	if (x_num_spaces <= -8 || x_num_spaces >= 8 || y_num_spaces <= -8 || y_num_spaces >= 8) {
 		return;
 	}
-	if (ABSVAL(x_num_spaces) != ABSVAL(y_num_spaces)) {
-		return;	// only handle equal number of tile movements each way
-	}
-	int num_spaces = ABSVAL(x_num_spaces);
+	int num_spaces_max = MAXVAL(ABSVAL(x_num_spaces), ABSVAL(y_num_spaces));
 
 	MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
 	MAP_GPIO_setOutputHighOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
@@ -208,10 +221,14 @@ void moveXY(int x_num_spaces, int y_num_spaces) {
 
 	int i;
 	int j;
-	for (i = 0; i < num_spaces; i++) {
+	for (i = 0; i < num_spaces_max; i++) {
 		for (j = 0; j < STEPS_PER_SPACE; j++) {
-			stepX();
-			stepY();
+			if (i < ABSVAL(x_num_spaces)) {
+				stepX();
+			}
+			if (i < ABSVAL(y_num_spaces)) {
+				stepY();
+			}
 		}
 	}
 	MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
@@ -234,7 +251,7 @@ void moveHalfTile(int xdir, int ydir)
 			MAP_GPIO_setOutputHighOnPin(Y_DIR_PORT, Y_DIR_PIN);	// set direction down
 		}
 		int j;
-		for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
+		for (j = 0; j < STEPS_PER_SPACE / 2; j++) {
 			stepY();
 		}
 		MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
@@ -253,7 +270,7 @@ void moveHalfTile(int xdir, int ydir)
 			MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
 		}
 		int j;
-		for (j = 0; j < STEPS_PER_HALF_SPACE; j++) {
+		for (j = 0; j < STEPS_PER_SPACE / 2; j++) {
 			stepX();
 		}
 		MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
@@ -364,9 +381,11 @@ void move(piece_movement movement, int engage, int useCorner) {
 	x_move = movement.cStart - gTableCursor.c;
 	y_move = movement.rStart - gTableCursor.r;
 
-	// move to the piece's source
+	// move to the piece's source quickly
+	gSpeedSetting = MOTOR_SPEED_FAST;
 	moveX(x_move);
 	moveY(y_move);
+	gSpeedSetting = MOTOR_SPEED_SLOW;
 
 	if (engage) {
 		// pull magnet up

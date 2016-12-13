@@ -26,21 +26,25 @@
 #define MOTOR_MOVE_DELAY	ONE_SECOND_TICKS / 2	// ticks after completing a motor movement (0.5 s)
 #define MOTOR_AWAKE_DELAY	ONE_SECOND_TICKS / 250	// ticks after awaking motor so it can "boot" (4 ms)
 
+#define MOTOR_SPEED_SLOW	0
+#define MOTOR_SPEED_FAST	1
+
+/** default (SLOW) motor values **/
 // these values are derived to apply 6400 Hz square wave to STEP
 #define X_STEP_TICKS 	938		// ticks to wait in high or low for x stepping
 #define Y_STEP_TICKS 	938		// ticks to wait in high or low for y stepping
 
+/** FAST motor values **/
+#define X_STEP_TICKS_FAST	469
+#define Y_STEP_TICKS_FAST	469
+
 // STEPS_PER_SPACE = steps needed to travel one chess board space (3.75 in)
 // to calculate this, choose an arbitrary step count and measure its corresponding distance
 //  then use a ratio with your desired distance to find the required step count
-#define STEPS_PER_SPACE	10196
-#define STEPS_PER_HALF_SPACE	10196 / 2	// used to travel between center and corner
+#define STEPS_PER_SPACE			10196
 
 #define STEPS_COLUMN_A 5098
 #define STEPS_ROW_ONE 3739
-
-//#define STEPS_COLUMN_A 4898
-//#define STEPS_ROW_ONE 3539
 
 // ports and pins for motor control
 #define X_STEP_PORT		GPIO_PORT_P2
@@ -63,7 +67,12 @@
 #define Y_HOMING_BUTTON_PORT	GPIO_PORT_P6
 #define Y_HOMING_BUTTON_PIN		GPIO_PIN7
 
-#define ABSVAL(x)	((x) >= 0 ? (x) : -(x))
+#define SERVO_SIGNAL_PORT	GPIO_PORT_P2
+#define SERVO_SIGNAL_PIN	GPIO_PIN4
+
+// macro functions
+#define ABSVAL(x)		((x) >= 0 ? (x) : -(x))
+#define MAXVAL(x, y)	((x) > (y) ? (x) : (y))
 
 /** Structs **/
 typedef struct {
@@ -74,6 +83,7 @@ typedef struct {
 /** Globals **/
 tableCursor gTableCursor;
 int gCaptureIndex;
+int gSpeedSetting;
 
 /** Functions **/
 // do any setup to send commands to motor driver
