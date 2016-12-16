@@ -17,8 +17,8 @@
 #define SERVO_DELAY_BETWEEN_PULSE 	24000	// low ticks between pulses, 20 ms
 // according to datasheet the full range is spanned by 0.75 ms (900 ticks) and 2.25 ms (2700 ticks) pulses
 // in practice it seems we need to stretch these out a bit further
-#define SERVO_PULSE_WIDTH_1			2225	 // high ticks for engage, 1.5 ms
-#define SERVO_PULSE_WIDTH_2			1175 // high ticks for disengage, 2.25 ms
+#define SERVO_PULSE_WIDTH_1			2175	// high ticks for engage
+#define SERVO_PULSE_WIDTH_2			1175 	// high ticks for disengage
 
 // delays associated with motor components
 #define ONE_SECOND_TICKS	12000000
@@ -44,10 +44,10 @@
 #define STEPS_PER_SPACE			10196
 
 // values to generate 0.5 in offset before disengaging servo
-#define SERVO_CORRECTION_STEPS		1359
+#define SERVO_CORRECTION_STEPS		1631
 
-#define STEPS_COLUMN_A 5098
-#define STEPS_ROW_ONE 3739
+#define STEPS_COLUMN_A 6118
+#define STEPS_ROW_ONE 3399
 
 // ports and pins for motor control
 #define X_STEP_PORT		GPIO_PORT_P2

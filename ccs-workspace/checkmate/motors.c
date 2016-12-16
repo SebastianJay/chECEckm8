@@ -135,7 +135,7 @@ void stepX() {
 
 void moveX(int num_spaces) {
 	// Bounds check
-	if (num_spaces == 0 || num_spaces <= -8 || num_spaces >= 8) {
+	if (num_spaces == 0 || num_spaces < -8 || num_spaces > 8) {
 		return;
 	}
 
@@ -174,7 +174,7 @@ void stepY() {
 
 void moveY(int num_spaces) {
 	// Bounds check
-	if (num_spaces == 0 || num_spaces <= -8 || num_spaces >= 8) {
+	if (num_spaces == 0 || num_spaces < -8 || num_spaces > 8) {
 		return;
 	}
 
@@ -200,7 +200,7 @@ void moveY(int num_spaces) {
 
 // NOTE speed is less than moveX or moveY by itself since steps are blocking
 void moveXY(int x_num_spaces, int y_num_spaces) {
-	if (x_num_spaces <= -8 || x_num_spaces >= 8 || y_num_spaces <= -8 || y_num_spaces >= 8) {
+	if (x_num_spaces < -8 || x_num_spaces > 8 || y_num_spaces < -8 || y_num_spaces > 8) {
 		return;
 	}
 	int num_spaces_max = MAXVAL(ABSVAL(x_num_spaces), ABSVAL(y_num_spaces));
@@ -257,6 +257,7 @@ void moveHalfTile(int xdir, int ydir)
 		MAP_GPIO_setOutputLowOnPin(Y_SLEEP_PORT, Y_SLEEP_PIN);
 		_delay_cycles(MOTOR_MOVE_DELAY);
 	}
+
 	if (xdir != 0)
 	{
 		MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
@@ -381,7 +382,7 @@ void move(piece_movement movement, int engage, int useCorner) {
 	x_move = movement.cStart - gTableCursor.c;
 	y_move = movement.rStart - gTableCursor.r;
 
-	// move to the piece's source quickly
+	// move to the piece's source
 	gSpeedSetting = MOTOR_SPEED_FAST;
 	moveX(x_move);
 	moveY(y_move);
@@ -392,9 +393,9 @@ void move(piece_movement movement, int engage, int useCorner) {
 		engageMagnet();
 	}
 
-	int useCornerUpperLeft = movement.rStart <= 3 ? TRUE : FALSE;
+	int useCornerUpperRight = movement.rStart <= 3 ? TRUE : FALSE;
 	if (useCorner) {
-		if (useCornerUpperLeft) {
+		if (useCornerUpperRight) {
 			// move to upper right corner
 			moveHalfTile(1, 1);
 		} else {
@@ -413,7 +414,7 @@ void move(piece_movement movement, int engage, int useCorner) {
 		}
 		x_move = 7 - movement.cStart;
 		y_move = captureRow - movement.rStart;
-		if (useCorner && !useCornerUpperLeft) {
+		if (useCorner && !useCornerUpperRight) {
 			// adjust for corner difference
 			y_move++;
 			x_move++;
@@ -471,7 +472,7 @@ void move(piece_movement movement, int engage, int useCorner) {
 
 		if (useCorner) {
 			// move to center of square
-			if (useCornerUpperLeft) {
+			if (useCornerUpperRight) {
 				moveHalfTile(-1, -1);
 			} else {
 				moveHalfTile(1, 1);
@@ -479,7 +480,8 @@ void move(piece_movement movement, int engage, int useCorner) {
 		}
 
 		if (engage) {
-			disengageMagnet(TRUE);
+			int useOffset = (movement.rEnd >= 2 && movement.rEnd <= 5 && movement.cEnd >= 3 && movement.cEnd <= 5) ? TRUE : FALSE;
+			disengageMagnet(useOffset);
 		}
 
 		// set cursor to destination
@@ -498,44 +500,34 @@ void engageMagnet()
 
 void disengageMagnet(int doCorrection)
 {
-	// DEBUG
-	doCorrection = FALSE;
-	// END DEBUG
 	if (doCorrection) {
-		// wake up motor
+		// wake up x-motor
 		MAP_GPIO_setOutputHighOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
 		_delay_cycles(MOTOR_AWAKE_DELAY);
+		// move before servo goes down
+		MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
+		int i;
+		for (i = 0; i < SERVO_CORRECTION_STEPS; i++)
+		{
+			stepX();
+		}
+		_delay_cycles(MOTOR_MOVE_DELAY);
 	}
 
 	pwmConfig.timerPeriod = SERVO_DELAY_BETWEEN_PULSE + SERVO_PULSE_WIDTH_2;
 	pwmConfig.dutyCycle = SERVO_PULSE_WIDTH_2;
 	MAP_Timer_A_generatePWM(TIMER_A0_BASE, &pwmConfig);
+	_delay_cycles(SERVO_ENGAGE_DELAY);
 
 	if (doCorrection) {
-		// move while servo goes down, then move back
-		// TODO refactor duplicated stepping code
-		MAP_GPIO_setOutputLowOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction right
+		// move back to correct spot
+		MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
 		int i;
 		for (i = 0; i < SERVO_CORRECTION_STEPS; i++)
 		{
-			MAP_GPIO_setOutputHighOnPin(X_STEP_PORT, X_STEP_PIN);
-			_delay_cycles(SERVO_CORRECTION_STEP_TICKS);
-			MAP_GPIO_setOutputLowOnPin(X_STEP_PORT, X_STEP_PIN);
-			_delay_cycles(SERVO_CORRECTION_STEP_TICKS);
-		}
-		_delay_cycles(MOTOR_MOVE_DELAY);
-		MAP_GPIO_setOutputHighOnPin(X_DIR_PORT, X_DIR_PIN);	// set direction left
-		for (i = 0; i < SERVO_CORRECTION_STEPS; i++)
-		{
-			MAP_GPIO_setOutputHighOnPin(X_STEP_PORT, X_STEP_PIN);
-			_delay_cycles(SERVO_CORRECTION_STEP_TICKS);
-			MAP_GPIO_setOutputLowOnPin(X_STEP_PORT, X_STEP_PIN);
-			_delay_cycles(SERVO_CORRECTION_STEP_TICKS);
+			stepX();
 		}
 		_delay_cycles(MOTOR_MOVE_DELAY);
 		MAP_GPIO_setOutputLowOnPin(X_SLEEP_PORT, X_SLEEP_PIN);
-	}
-	else {
-		_delay_cycles(SERVO_ENGAGE_DELAY);
 	}
 }
